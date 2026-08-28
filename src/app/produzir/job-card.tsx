@@ -1,11 +1,12 @@
 import type { RenderEstrutura, RenderManifest } from "@/db/schema";
 import { MODELOS_VIDEO, MODELO_PADRAO, custoClipe, modeloDe } from "@/lib/modelos-video";
 import {
-  ajustarEscalaAction, aprovarAction, cancelarAction, pedirTakeAction,
+  ajustarEscalaAction, aprovarAction, cancelarAction, marcarRecorteAction, pedirTakeAction,
   regerarImagemAction, reprocessarAction, salvarAvatarAction, salvarPromptManualAction,
   salvarRoteiroAction, tentarComModeloAction, usarTakeAction,
 } from "./actions";
 import { Escala } from "./escala";
+import { MarcarRecorte } from "./marcar-recorte";
 import { PromptManual } from "./prompt-manual";
 import { SalvarAvatar } from "./salvar-avatar";
 import { RoteiroEditor } from "./roteiro-editor";
@@ -277,6 +278,55 @@ export function JobCard({ job }: { job: Job }) {
             );
           })}
         </div>
+      )}
+
+      {/* A receita de remontagem, trecho a trecho. É aqui que se conserta uma
+          edição que a análise não enxergou — ela mede por linha de pixel, então
+          recorte flutuante no meio da tela é invisível pra ela. */}
+      {m.edicao?.trechos && m.estrutura && (
+        <details className="rounded border border-neutral-900 p-3">
+          <summary className="cursor-pointer text-xs text-neutral-400">
+            Como o original vai ser remontado · {m.edicao.trechos.length} trecho(s)
+          </summary>
+          <div className="mt-3 space-y-3">
+            {m.edicao.trechos.map((t, i) => {
+              const cs = t.camadas ?? (t.faixas ?? []).map((f) => ({
+                fonte: f.fonte,
+                para: { x0: 0, y0: f.y0, x1: m.estrutura!.largura, y1: f.y1 },
+                de: undefined as { x0: number; y0: number; x1: number; y1: number } | undefined,
+              }));
+              const recorte = t.camadas?.find((c) => c.fonte === "ref" && c.de
+                && (c.de.x0 > 0 || c.de.x1 < m.estrutura!.largura))?.de;
+              const frame = m.frames?.find((f) => f.t >= t.ini_ref && f.t <= t.fim_ref) ?? m.frames?.[i];
+
+              return (
+                <div key={i} className="border-l border-neutral-900 pl-3">
+                  <p className="text-[11px] text-neutral-500">
+                    {t.ini_av.toFixed(2)}s → {t.fim_av.toFixed(2)}s
+                  </p>
+                  <p className="font-mono text-[10px] text-neutral-600">
+                    {cs.map((c) =>
+                      `${c.fonte} x${c.para.x0}-${c.para.x1} y${c.para.y0}-${c.para.y1}`,
+                    ).join("  ·  ")}
+                  </p>
+                  {frame && (
+                    <div className="mt-1">
+                      <MarcarRecorte
+                        id={job.id}
+                        trecho={i}
+                        frameUrl={frame.url}
+                        largura={m.estrutura!.largura}
+                        altura={m.estrutura!.altura}
+                        atual={recorte}
+                        acao={marcarRecorteAction}
+                      />
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </details>
       )}
 
       {(m.compostoUrl || m.versaoBUrl) && (

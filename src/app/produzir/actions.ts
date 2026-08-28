@@ -392,3 +392,69 @@ export async function apagarAvatarAction(id: string): Promise<void> {
 export async function listarAvatares() {
   return db.select().from(avatares).orderBy(desc(avatares.criadoEm)).limit(60);
 }
+
+/**
+ * Marca à mão o retângulo do original de um trecho.
+ *
+ * Reescreve as camadas daquele trecho para duas: o avatar em quadro cheio e o
+ * recorte da referência por cima. É o que destrava topologia que a análise não
+ * enxerga — ela mede por LINHA de pixel, então um cartão flutuando no meio da
+ * tela, com a pessoa aparecendo dos dois lados, é invisível pra ela.
+ *
+ * `ret` nulo devolve o trecho ao que a análise tinha proposto, refazendo o
+ * passo `montar`.
+ */
+export async function marcarRecorteAction(
+  id: string,
+  trecho: number,
+  ret: { x0: number; y0: number; x1: number; y1: number } | null,
+): Promise<void> {
+  await requireDashboardAuth();
+
+  const [job] = await db.select().from(renderJobs).where(eq(renderJobs.id, id));
+  if (!job) throw new Error("rodada não encontrada");
+
+  const e = job.manifest.edicao;
+  const est = job.manifest.estrutura;
+  if (!e?.trechos?.[trecho] || !est) throw new Error("esta rodada ainda não tem receita de remontagem");
+
+  // Sem recorte: o `montar` recalcula tudo do zero a partir da análise.
+  if (!ret) {
+    const aplicado = await db
+      .update(renderJobs)
+      .set({ status: "pending", step: "montar", lastError: null, attempts: 0, updatedAt: new Date() })
+      .where(paradaLivre(id))
+      .returning({ id: renderJobs.id });
+    exigirAplicado(aplicado);
+    revalidatePath("/produzir");
+    return;
+  }
+
+  const quadro = { x0: 0, y0: 0, x1: est.largura, y1: est.altura };
+  const trechos = e.trechos.map((t, i) =>
+    i === trecho
+      ? { ...t, faixas: undefined, camadas: [
+          { fonte: "avatar" as const, para: quadro },
+          { fonte: "ref" as const, de: ret, para: ret },
+        ] }
+      : t,
+  );
+
+  const aplicado = await db
+    .update(renderJobs)
+    .set({
+      manifest: { ...job.manifest, edicao: { ...e, trechos } },
+      // Volta pro `compor`, não pro `montar`: a costura dos clipes não mudou, e
+      // refazê-la seria minutos de ffmpeg à toa.
+      status: "pending",
+      step: "compor",
+      lastError: null,
+      attempts: 0,
+      updatedAt: new Date(),
+    })
+    .where(paradaLivre(id))
+    .returning({ id: renderJobs.id });
+  exigirAplicado(aplicado);
+
+  revalidatePath("/produzir");
+}

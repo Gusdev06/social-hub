@@ -30,7 +30,8 @@ export const compor = async (job: Job): Promise<StepResult> =>
 
     // Com a receita pronta, o compositor sempre tem o que montar — mesmo que
     // todo trecho seja tela cheia. A saída curta abaixo é só pro modelo antigo.
-    const temComposicao = e.trechos?.some((t) => t.faixas.length > 1) ?? false;
+    const temComposicao =
+      e.trechos?.some((t) => (t.camadas?.length ?? t.faixas?.length ?? 0) > 1) ?? false;
     if (!temComposicao && (!e.topo || !e.corteRef || geometriaInvalida)) {
       return {
         patch: { compostoUrl: avatarUrl },
