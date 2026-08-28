@@ -14,6 +14,9 @@ export default async function Produzir() {
     <main className="mx-auto max-w-5xl px-6 py-12 space-y-8">
       <header>
         <h1 className="text-xl font-semibold">Produzir vídeo</h1>
+        <a href="/videos" className="ml-3 align-middle text-xs font-normal text-neutral-400 underline hover:text-neutral-200">
+          ver os vídeos produzidos
+        </a>
         <p className="mt-1 text-sm text-neutral-500">
           Clona um criativo que já escalou trocando só o avatar. A estrutura de edição é medida
           do arquivo — faixas em pixel, cortes em segundo — não estimada no olho.
