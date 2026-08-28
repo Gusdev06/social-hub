@@ -10,9 +10,12 @@ import { criarJobAction, type CriarState } from "./actions";
  * Server Action estouraria o teto de ~4,5 MB de corpo de request da Vercel —
  * e criativo de 30s costuma ter 10~50 MB.
  */
-export function NovaRodada() {
+type AvatarSalvo = { id: string; nome: string; imagemUrl: string; usos: number };
+
+export function NovaRodada({ avatares = [] }: { avatares?: AvatarSalvo[] }) {
   const [refVideoUrl, setRefVideoUrl] = useState("");
   const [modelo, setModelo] = useState<string>(MODELO_PADRAO);
+  const [avatarId, setAvatarId] = useState("");
   const [subindo, setSubindo] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const [estado, submeter, pending] = useActionState<CriarState, FormData>(criarJobAction, null);
@@ -89,11 +92,59 @@ export function NovaRodada() {
           Avatar novo
           <input
             name="castingBrief"
-            placeholder="homem brasileiro, 37, barba curta, camiseta azul-marinho, sofá"
+            placeholder={avatarId ? "não é usado com avatar salvo" : "homem brasileiro, 37, barba curta, camiseta azul-marinho, sofá"}
+            disabled={Boolean(avatarId)}
             className="mt-1 w-full rounded border border-neutral-800 bg-transparent px-3 py-2 text-sm"
           />
         </label>
       </div>
+
+      {avatares.length > 0 && (
+        <div>
+          <input type="hidden" name="avatarId" value={avatarId} />
+          <label className="text-sm font-medium">Avatar</label>
+          <p className="text-xs text-neutral-500 mt-0.5">
+            Reusar um avatar salvo mantém o mesmo personagem entre criativos e pula a
+            geração do rosto. Vai junto a nota de casting, que é o que segura a identidade
+            entre um clipe e outro.
+          </p>
+
+          <div className="mt-2 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setAvatarId("")}
+              className={`rounded border px-3 py-2 text-xs ${
+                avatarId === "" ? "border-neutral-100 bg-neutral-900/60" : "border-neutral-800 hover:border-neutral-700"
+              }`}
+            >
+              Gerar um rosto novo
+              <span className="mt-0.5 block text-[10px] text-neutral-500">US$ 0,05 · a partir da descrição</span>
+            </button>
+
+            {avatares.map((a) => (
+              <button
+                key={a.id}
+                type="button"
+                onClick={() => setAvatarId(a.id)}
+                className={`flex items-center gap-2 rounded border p-1.5 pr-3 text-left text-xs ${
+                  avatarId === a.id ? "border-neutral-100 bg-neutral-900/60" : "border-neutral-800 hover:border-neutral-700"
+                }`}
+              >
+                <img src={a.imagemUrl} alt="" className="h-12 w-9 rounded object-cover" />
+                <span>
+                  <span className="block max-w-[10rem] truncate">{a.nome}</span>
+                  <span className="mt-0.5 block text-[10px] text-neutral-500">
+                    {a.usos === 0 ? "nunca usado" : `${a.usos} rodada(s)`}
+                  </span>
+                </span>
+              </button>
+            ))}
+          </div>
+          <a href="/avatares" className="mt-1.5 inline-block text-[11px] text-neutral-600 underline hover:text-neutral-400">
+            gerenciar avatares
+          </a>
+        </div>
+      )}
 
       <div>
         <label className="text-sm font-medium">Modelo de vídeo</label>

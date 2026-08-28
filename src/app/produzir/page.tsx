@@ -1,13 +1,13 @@
 import { AutoRefresh } from "./auto-refresh";
 import { JobCard } from "./job-card";
-import { listarJobs } from "./actions";
+import { listarAvatares, listarJobs } from "./actions";
 import { NovaRodada } from "./nova-rodada";
 import { WorkerStatus } from "./worker-status";
 
 export const dynamic = "force-dynamic";
 
 export default async function Produzir() {
-  const jobs = await listarJobs();
+  const [jobs, avatares] = await Promise.all([listarJobs(), listarAvatares()]);
   const rodando = jobs.some((j) => ["pending", "running"].includes(j.status));
 
   return (
@@ -25,7 +25,7 @@ export default async function Produzir() {
 
       <WorkerStatus temFila={rodando} />
 
-      <NovaRodada />
+      <NovaRodada avatares={avatares} />
 
       <AutoRefresh ativo={rodando} />
 

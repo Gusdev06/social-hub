@@ -2,11 +2,12 @@ import type { RenderEstrutura, RenderManifest } from "@/db/schema";
 import { MODELOS_VIDEO, MODELO_PADRAO, custoClipe, modeloDe } from "@/lib/modelos-video";
 import {
   ajustarEscalaAction, aprovarAction, cancelarAction, pedirTakeAction,
-  regerarImagemAction, reprocessarAction, salvarPromptManualAction,
+  regerarImagemAction, reprocessarAction, salvarAvatarAction, salvarPromptManualAction,
   salvarRoteiroAction, tentarComModeloAction, usarTakeAction,
 } from "./actions";
 import { Escala } from "./escala";
 import { PromptManual } from "./prompt-manual";
+import { SalvarAvatar } from "./salvar-avatar";
 import { RoteiroEditor } from "./roteiro-editor";
 
 const CORES: Record<string, string> = {
@@ -90,6 +91,8 @@ type Job = {
   id: string; name: string; step: string; status: string;
   manifest: RenderManifest; costCents: number; lastError: string | null;
   refVideoUrl: string; createdAt: Date;
+  /** A descrição do avatar, usada como nome sugerido ao salvar no acervo. */
+  castingBrief: string | null;
 };
 
 export function JobCard({ job }: { job: Job }) {
@@ -192,6 +195,13 @@ export function JobCard({ job }: { job: Job }) {
               <p className="text-[11px] text-neutral-600">
                 {m.imagensDescartadas!.length} rosto(s) descartado(s)
               </p>
+            )}
+            {m.casting?.nota && (
+              <SalvarAvatar
+                id={job.id}
+                sugestao={job.castingBrief?.slice(0, 40) ?? job.name}
+                acao={salvarAvatarAction}
+              />
             )}
           </div>
         </div>

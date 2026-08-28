@@ -1,9 +1,9 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { and, desc, eq, isNull, lt, ne, or } from "drizzle-orm";
+import { and, desc, eq, isNull, lt, ne, or, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { renderJobs, socialAccounts, type RenderManifest } from "@/db/schema";
+import { avatares, renderJobs, socialAccounts, type RenderManifest } from "@/db/schema";
 import { requireDashboardAuth } from "@/lib/auth";
 import { MODELO_PADRAO, custoClipe, ehModeloVideo, modeloDe } from "@/lib/modelos-video";
 
@@ -73,6 +73,17 @@ export async function criarJobAction(_prev: CriarState, form: FormData): Promise
   });
   if (!conta) return { ok: false, message: "Nenhuma conta conectada — falta o workspace." };
 
+  // Avatar reusado: a rodada já nasce com o rosto e a nota, e o passo
+  // `imagem_base` se reconhece pronto e não gasta nem gera outra pessoa.
+  const avatarId = String(form.get("avatarId") ?? "").trim();
+  let manifest: RenderManifest = { modeloVideo };
+  if (avatarId) {
+    const [a] = await db.select().from(avatares).where(eq(avatares.id, avatarId));
+    if (!a) return { ok: false, message: "avatar salvo não encontrado." };
+    manifest = { ...manifest, imagemBaseUrl: a.imagemUrl, casting: { nota: a.nota, promptBase: a.prompt ?? undefined } };
+    await db.update(avatares).set({ usos: sql`${avatares.usos} + 1` }).where(eq(avatares.id, a.id));
+  }
+
   const [job] = await db
     .insert(renderJobs)
     .values({
@@ -80,7 +91,7 @@ export async function criarJobAction(_prev: CriarState, form: FormData): Promise
       name,
       refVideoUrl,
       castingBrief,
-      manifest: { modeloVideo },
+      manifest,
     })
     .returning({ id: renderJobs.id });
 
@@ -338,4 +349,46 @@ export async function salvarPromptManualAction(id: string, n: number, prompt: st
   exigirAplicado(aplicado);
 
   revalidatePath("/produzir");
+}
+
+/**
+ * Salva o avatar da rodada pra reusar em outras.
+ *
+ * Guarda a imagem E a nota de casting. A nota reaparece literalmente em todo
+ * prompt de clipe e é o que mantém a mesma pessoa entre um clipe e outro —
+ * salvar só a imagem daria o rosto certo no clipe 1 e outra pessoa no clipe 3.
+ */
+export async function salvarAvatarAction(id: string, nome: string): Promise<void> {
+  await requireDashboardAuth();
+
+  const [job] = await db.select().from(renderJobs).where(eq(renderJobs.id, id));
+  if (!job) throw new Error("rodada não encontrada");
+
+  const { imagemBaseUrl, casting } = job.manifest;
+  if (!imagemBaseUrl || !casting?.nota) {
+    throw new Error("esta rodada ainda não tem rosto gerado");
+  }
+
+  await db.insert(avatares).values({
+    workspaceId: job.workspaceId,
+    nome: nome.trim() || job.castingBrief?.slice(0, 40) || "avatar sem nome",
+    imagemUrl: imagemBaseUrl,
+    nota: casting.nota,
+    prompt: casting.promptBase,
+  });
+
+  revalidatePath("/produzir");
+  revalidatePath("/avatares");
+}
+
+export async function apagarAvatarAction(id: string): Promise<void> {
+  await requireDashboardAuth();
+  // A imagem fica no Storage: outras rodadas já feitas apontam pra ela.
+  await db.delete(avatares).where(eq(avatares.id, id));
+  revalidatePath("/avatares");
+  revalidatePath("/produzir");
+}
+
+export async function listarAvatares() {
+  return db.select().from(avatares).orderBy(desc(avatares.criadoEm)).limit(60);
 }
