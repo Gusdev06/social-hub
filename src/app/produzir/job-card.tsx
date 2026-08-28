@@ -163,6 +163,7 @@ export function JobCard({ job }: { job: Job }) {
                 n={c.n}
                 prompt={m.prompts?.find((p) => p.n === c.n)?.prompt ?? ""}
                 origem={m.prompts?.find((p) => p.n === c.n)?.origem}
+                enviado={m.prompts?.find((p) => p.n === c.n)?.enviado}
                 portao={noPortaoDePrompt && c.n === proximoClipe}
                 acao={salvarPromptManualAction}
               />

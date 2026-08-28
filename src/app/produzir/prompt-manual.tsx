@@ -13,18 +13,21 @@ import { useState, useTransition } from "react";
  * de vídeo é o "Confirmei — seguir".
  */
 export function PromptManual({
-  id, n, prompt, origem, portao, acao,
+  id, n, prompt, origem, enviado, portao, acao,
 }: {
   id: string;
   n: number;
   prompt: string;
   origem?: "llm" | "humano";
+  /** O que a LLM recebeu pra escrever este prompt. Ausente se foi escrito à mão. */
+  enviado?: { sistema: string; usuario: string; modelo: string };
   /** A esteira parou esperando a conferência DESTE clipe. */
   portao?: boolean;
   acao: (id: string, n: number, prompt: string) => Promise<void>;
 }) {
   const [v, setV] = useState(prompt);
   const [aberto, setAberto] = useState(false);
+  const [vendoEnvio, setVendoEnvio] = useState(false);
   const [pending, start] = useTransition();
 
   if (!aberto && !portao) {
@@ -63,6 +66,40 @@ export function PromptManual({
         Vale só para o clipe {n}. Vazio devolve o clipe para o escritor automático.
         {origem === "llm" && !portao && " Escrito pela LLM."}
       </p>
+
+      {/* O que a LLM RECEBEU. Fica recolhido porque são ~2 KB de texto que só
+          importam quando o prompt sai estranho — e aí a pergunta é se ela
+          interpretou mal ou se o insumo já chegou errado. */}
+      {enviado && (
+        <div>
+          <button
+            type="button"
+            onClick={() => setVendoEnvio((x) => !x)}
+            className="text-[11px] text-neutral-500 underline hover:text-neutral-300"
+          >
+            {vendoEnvio ? "esconder" : "ver"} o que foi enviado para a {enviado.modelo}
+          </button>
+
+          {vendoEnvio && (
+            <div className="mt-1.5 space-y-2 rounded border border-neutral-900 bg-neutral-950/60 p-2.5">
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-neutral-600">instruções</p>
+                <pre className="mt-0.5 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-neutral-500">
+                  {enviado.sistema}
+                </pre>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wide text-neutral-600">
+                  nota de casting + a fala deste clipe
+                </p>
+                <pre className="mt-0.5 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-neutral-400">
+                  {enviado.usuario}
+                </pre>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
       <div className="flex gap-2">
         <button
           disabled={pending || v.trim() === prompt.trim()}
