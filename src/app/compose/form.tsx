@@ -232,7 +232,7 @@ export function ComposeForm({
         </FieldSet>
 
         <Field orientation="horizontal">
-          <Button type="submit" size="lg" variant="secondary" disabled={pending || Boolean(enviando)}>
+          <Button type="submit" size="lg" disabled={pending || Boolean(enviando)}>
             {pending ? "Publicando…" : agendar ? "Agendar" : "Publicar agora"}
           </Button>
         </Field>

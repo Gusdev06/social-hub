@@ -246,7 +246,7 @@ export function CarrosselEditor({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" size="lg" variant="secondary" onClick={exportar}>
+        <Button type="button" size="lg" onClick={exportar}>
           Gerar as {slides.length} artes
         </Button>
         {urls.length > 0 && (

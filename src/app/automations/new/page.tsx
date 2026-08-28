@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { socialAccounts } from "@/db/schema";
 import { listMedia, type IgMedia } from "@/lib/instagram";
 import { Wizard } from "../wizard";
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 export const dynamic = "force-dynamic";
@@ -37,7 +38,12 @@ export default async function NovaAutomacao() {
   }
 
   return (
-    <Wizard
+    <PageShell largura="lg">
+      <PageHeader>
+        <PageTitle>Nova automação</PageTitle>
+        <PageDescription>Comentário com a palavra certa vira DM automática.</PageDescription>
+      </PageHeader>
+      <Wizard
       contas={contas.map((c) => ({ id: c.id, username: c.username, avatarUrl: c.avatarUrl }))}
       media={media.map((m) => ({
         id: m.id,
@@ -49,5 +55,6 @@ export default async function NovaAutomacao() {
         timestamp: m.timestamp,
       }))}
     />
+    </PageShell>
   );
 }

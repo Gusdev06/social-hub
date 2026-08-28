@@ -230,7 +230,7 @@ export function Artes({
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <Button type="button" size="lg" variant="secondary" onClick={gerarESubir}>
+        <Button type="button" size="lg" onClick={gerarESubir}>
           Gerar as {slides.length} artes
         </Button>
         {urls.length > 0 && (

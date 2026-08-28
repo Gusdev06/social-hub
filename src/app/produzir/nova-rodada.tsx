@@ -206,7 +206,7 @@ export function NovaRodada({ avatares = [] }: { avatares?: AvatarSalvo[] }) {
             )}
 
             <Field orientation="horizontal">
-              <Button type="submit" size="lg" variant="secondary" disabled={pending || !refVideoUrl}>
+              <Button type="submit" size="lg" disabled={pending || !refVideoUrl}>
                 {pending ? "Criando…" : "Analisar estrutura"}
               </Button>
             </Field>

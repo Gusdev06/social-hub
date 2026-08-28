@@ -26,17 +26,20 @@ type BadgeVariant = VariantProps<typeof badgeVariants>["variant"];
  * ficam discretos.
  */
 const VARIANTE: Record<string, BadgeVariant> = {
-  pending: "outline",
-  running: "outline",
+  pending: "ghost",
+  running: "ghost",
   waiting_approval: "default",
-  done: "outline",
-  failed: "destructive",
-  canceled: "secondary",
+  done: "ghost",
+  failed: "ghost",
+  canceled: "ghost",
 };
 
 const TOM: Record<string, string> = {
-  running: "border-warning/40 text-warning",
-  done: "border-success/40 text-success",
+  pending: "bg-accent-blue-soft text-accent-blue",
+  running: "bg-accent-yellow-soft text-accent-yellow animate-pulsar",
+  done: "bg-accent-green-soft text-accent-green",
+  failed: "bg-accent-red-soft text-accent-red",
+  canceled: "bg-surface-card text-ash",
 };
 
 const ROTULO: Record<string, string> = {
@@ -51,7 +54,7 @@ const ROTULO: Record<string, string> = {
 /** A estrutura medida, do jeito que o script devolve — em pixels e segundos. */
 function Estrutura({ e, frames }: { e: RenderEstrutura; frames: RenderManifest["frames"] }) {
   return (
-    <div className="flex flex-col gap-3">
+    <div className="stagger flex flex-col gap-3">
       <p className="text-xs text-muted-foreground">
         {e.largura}×{e.altura} · {e.fps.toFixed(0)}fps · {e.duracao.toFixed(2)}s · cortes de layout:{" "}
         <span className="text-foreground">
@@ -245,7 +248,7 @@ export function JobCard({ job }: { job: Job }) {
         )}
 
         {(m.clipes?.length ?? 0) > 0 && (
-          <div className="flex flex-col gap-3">
+          <div className="stagger flex flex-col gap-3">
             {m.clipes!.filter((c) => c.url).map((c) => {
               const emUso = c.modelo ?? m.modeloVideo ?? MODELO_PADRAO;
               const dur = m.roteiro?.find((r) => r.n === c.n)?.duracao ?? 5;
@@ -315,7 +318,7 @@ export function JobCard({ job }: { job: Job }) {
               <AccordionTrigger className="text-xs text-muted-foreground">
                 Como o original vai ser remontado · {m.edicao.trechos.length} trecho(s)
               </AccordionTrigger>
-              <AccordionContent className="flex flex-col gap-3">
+              <AccordionContent className="stagger flex flex-col gap-3">
                 {m.edicao.trechos.map((t, i) => {
                   const cs = t.camadas ?? (t.faixas ?? []).map((f) => ({
                     fonte: f.fonte,
@@ -372,7 +375,7 @@ export function JobCard({ job }: { job: Job }) {
         <div className="flex flex-wrap gap-2">
           {job.status === "waiting_approval" && (
             <form action={aprovarAction.bind(null, job.id)}>
-              <Button type="submit" size="sm" variant="secondary">
+              <Button type="submit" size="sm">
                 Confirmei — seguir
               </Button>
             </form>

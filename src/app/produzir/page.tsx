@@ -18,7 +18,7 @@ export default async function Produzir() {
       <PageHeader>
         <div className="flex items-baseline gap-3">
           <PageTitle className="text-xl">Produzir vídeo</PageTitle>
-          <Button variant="link" size="sm" render={<a href="/videos" />} nativeButton={false}>
+          <Button variant="link" size="sm" className="text-muted-foreground" render={<a href="/videos" />} nativeButton={false}>
             ver os vídeos produzidos
           </Button>
         </div>
@@ -34,7 +34,7 @@ export default async function Produzir() {
 
       <AutoRefresh ativo={rodando} />
 
-      <section className="flex flex-col gap-4">
+      <section className="stagger flex flex-col gap-4">
         {jobs.length === 0 ? (
           <Empty>
             <EmptyHeader>

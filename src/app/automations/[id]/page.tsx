@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { automations, socialAccounts } from "@/db/schema";
 import { listMedia, type IgMedia } from "@/lib/instagram";
 import { Wizard } from "../wizard";
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +44,12 @@ export default async function EditarAutomacao({
     : regra.mediaId ? [regra.mediaId] : [];
 
   return (
-    <Wizard
+    <PageShell largura="lg">
+      <PageHeader>
+        <PageTitle>Editar automação</PageTitle>
+        <PageDescription>As mudanças valem para os próximos comentários.</PageDescription>
+      </PageHeader>
+      <Wizard
       contas={contas.map((c) => ({ id: c.id, username: c.username, avatarUrl: c.avatarUrl }))}
       media={media.map((m) => ({
         id: m.id,
@@ -69,5 +75,6 @@ export default async function EditarAutomacao({
         followUpButtons: regra.followUpButtons,
       }}
     />
+    </PageShell>
   );
 }

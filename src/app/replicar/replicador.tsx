@@ -125,7 +125,7 @@ export function Replicador({ uploadOn, handle }: { uploadOn: boolean; handle: st
           />
 
           <Field orientation="horizontal">
-            <Button type="submit" size="lg" variant="secondary" disabled={analisando}>
+            <Button type="submit" size="lg" disabled={analisando}>
               {analisando ? "Analisando…" : "Fazer o teardown"}
             </Button>
           </Field>

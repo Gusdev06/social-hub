@@ -3,6 +3,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { automations, socialAccounts } from "@/db/schema";
 import { AutomationRows } from "./rows";
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
 import { Button } from "@/components/ui/button";
 import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
@@ -54,14 +55,21 @@ export default async function Automations({
     return true;
   });
 
+  const ativas = filtradas.filter((a) => a.isActive).length;
+
   return (
-    <main className="flex flex-col gap-6">
-      <div className="flex items-start justify-between gap-4">
-        <h2 className="text-2xl font-semibold">Minhas automações</h2>
-        <Button size="lg" className="shrink-0" render={<Link href="/automations/new" />} nativeButton={false}>
-          + Nova Automação
+    <PageShell largura="lg">
+      <PageHeader className="flex-row items-start justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <PageTitle>Automações</PageTitle>
+          <PageDescription>
+            {filtradas.length} regra(s) · {ativas} no ar
+          </PageDescription>
+        </div>
+        <Button className="shrink-0" render={<Link href="/automations/new" />} nativeButton={false}>
+          Nova automação
         </Button>
-      </div>
+      </PageHeader>
 
       <form className="flex flex-wrap items-center gap-3">
         <Input
@@ -108,6 +116,6 @@ export default async function Automations({
           }))}
         />
       )}
-    </main>
+    </PageShell>
   );
 }

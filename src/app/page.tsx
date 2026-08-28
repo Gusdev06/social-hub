@@ -6,9 +6,8 @@ import { SectionLabel } from "@/components/section-label";
 import { StatusDot } from "@/components/status-dot";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { cn } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -25,21 +24,23 @@ export default async function Dashboard() {
   ]);
 
   return (
-    <PageShell className="gap-10 py-12">
+    <PageShell largura="lg">
       <PageHeader>
-        <PageTitle>Social Hub</PageTitle>
+        <PageTitle>Painel</PageTitle>
         <PageDescription>
-          {accounts.length} perfis · {rules.length} automações ativas
+          {accounts.length} perfis conectados · {rules.length} automações no ar
         </PageDescription>
       </PageHeader>
 
-      <section className="grid grid-cols-3 gap-4">
+      {/* Números lado a lado separados por fio, não três caixas. Numa tela densa
+          a caixa cobra atenção que o número já tem sozinho. */}
+      <section className="grid grid-cols-1 divide-y divide-hairline border-b sm:grid-cols-3 sm:divide-x sm:divide-y-0">
         <Stat label="Leads capturados" value={leadCount[0]?.n ?? 0} />
         <Stat label="DMs enviados (24h)" value={sentToday[0]?.n ?? 0} />
         <Stat label="Perfis conectados" value={accounts.length} />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-2">
         <SectionLabel>Perfis</SectionLabel>
         {accounts.length === 0 ? (
           <Empty>
@@ -48,28 +49,30 @@ export default async function Dashboard() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="flex flex-col gap-2">
+          <div className="stagger -mx-2.5 flex flex-col">
             {accounts.map((a) => (
-              <Item key={a.id} variant="outline">
+              <div key={a.id} className="cmd-row">
                 {/* avatar + username: requisito duro da auditoria do TikTok */}
-                <ItemMedia>
-                  <Avatar className="size-8">
-                    <AvatarImage src={a.avatarUrl ?? undefined} alt="" />
-                    <AvatarFallback>{a.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                </ItemMedia>
-                <ItemContent>
-                  <ItemTitle>@{a.username}</ItemTitle>
-                </ItemContent>
-                <Badge variant="outline">{a.platform}</Badge>
-                {!a.isActive && <Badge variant="secondary">inativo</Badge>}
-              </Item>
+                <Avatar className="size-6">
+                  <AvatarImage src={a.avatarUrl ?? undefined} alt="" />
+                  <AvatarFallback className="text-[10px]">
+                    {a.username.slice(0, 2).toUpperCase()}
+                  </AvatarFallback>
+                </Avatar>
+                <span className="truncate font-medium">@{a.username}</span>
+                <span className="text-xs text-ash">{a.platform}</span>
+                {!a.isActive && (
+                  <Badge variant="outline" className="ml-auto text-ash">
+                    inativo
+                  </Badge>
+                )}
+              </div>
             ))}
           </div>
         )}
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-2">
         <SectionLabel>Comentários recentes</SectionLabel>
         {recent.length === 0 ? (
           <Empty>
@@ -78,16 +81,23 @@ export default async function Dashboard() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="flex flex-col gap-1">
+          <div className="stagger -mx-2.5 flex flex-col">
             {recent.map((e) => (
-              <div key={e.id} className="flex items-center gap-3 rounded-md border px-3 py-2 text-sm">
+              <div key={e.id} className="cmd-row text-muted-foreground">
                 <StatusDot status={e.status} />
-                <span className="shrink-0 text-muted-foreground">
+                <span className="shrink-0 text-foreground">
                   @{e.fromUsername ?? e.fromUserId}
                 </span>
                 <span className="truncate">{e.text}</span>
                 {e.lastError && (
-                  <span className="ml-auto shrink-0 text-xs text-muted-foreground">{e.lastError}</span>
+                  <span
+                    className={cn(
+                      "ml-auto shrink-0 text-xs",
+                      e.status === "failed" ? "text-accent-red" : "text-ash",
+                    )}
+                  >
+                    {e.lastError}
+                  </span>
                 )}
               </div>
             ))}
@@ -100,11 +110,11 @@ export default async function Dashboard() {
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
-    <Card>
-      <CardContent className="flex flex-col gap-1">
-        <CardTitle className="text-2xl tabular-nums">{value}</CardTitle>
-        <CardDescription className="text-xs">{label}</CardDescription>
-      </CardContent>
-    </Card>
+    <div className="flex flex-col gap-0.5 px-1 py-4 sm:px-5 sm:first:pl-1">
+      <span data-numeric className="text-2xl font-medium tracking-tight">
+        {value}
+      </span>
+      <span className="text-xs text-muted-foreground">{label}</span>
+    </div>
   );
 }
