@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Sobe a esteira de vídeo junto com o login e religa se ela cair.
+  A esteira roda nesta máquina (não num container), então sem isso ela só anda
+  quando alguém lembra de abrir o terminal.
+
+  Instalar:
+    cp worker/launchd/com.gusta.socialhub.worker.plist ~/Library/LaunchAgents/
+    launchctl load -w ~/Library/LaunchAgents/com.gusta.socialhub.worker.plist
+
+  Parar:
+    launchctl unload -w ~/Library/LaunchAgents/com.gusta.socialhub.worker.plist
+
+  Log:  tail -f /tmp/social-hub-worker.log
+-->
+<plist version="1.0">
+<dict>
+  <key>Label</key><string>com.gusta.socialhub.worker</string>
+
+  <key>ProgramArguments</key>
+  <array>
+    <string>/usr/local/bin/npm</string>
+    <string>run</string>
+    <string>worker</string>
+  </array>
+
+  <key>WorkingDirectory</key><string>/Users/gustagoat/Documents/AIS-OS/projects/social-hub</string>
+
+  <!--
+    O launchd NÃO herda o PATH do seu shell — ele entrega um mínimo. node, npm e
+    principalmente o ffmpeg/ffprobe (em ~/.local/bin) ficam de fora, e a esteira
+    só descobria isso no meio de um passo, com FileNotFoundError.
+    Se você mover alguma dessas ferramentas, atualize aqui.
+  -->
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PATH</key><string>/Users/gustagoat/.local/bin:/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+  </dict>
+
+  <key>RunAtLoad</key><true/>
+  <key>KeepAlive</key><true/>
+  <!-- Sem isso, uma falha de boot vira loop de respawn e esquenta a máquina. -->
+  <key>ThrottleInterval</key><integer>30</integer>
+
+  <key>StandardOutPath</key><string>/tmp/social-hub-worker.log</string>
+  <key>StandardErrorPath</key><string>/tmp/social-hub-worker.log</string>
+</dict>
+</plist>

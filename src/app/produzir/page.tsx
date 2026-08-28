@@ -1,0 +1,38 @@
+import { AutoRefresh } from "./auto-refresh";
+import { JobCard } from "./job-card";
+import { listarJobs } from "./actions";
+import { NovaRodada } from "./nova-rodada";
+import { WorkerStatus } from "./worker-status";
+
+export const dynamic = "force-dynamic";
+
+export default async function Produzir() {
+  const jobs = await listarJobs();
+  const rodando = jobs.some((j) => ["pending", "running"].includes(j.status));
+
+  return (
+    <main className="mx-auto max-w-5xl px-6 py-12 space-y-8">
+      <header>
+        <h1 className="text-xl font-semibold">Produzir vídeo</h1>
+        <p className="mt-1 text-sm text-neutral-500">
+          Clona um criativo que já escalou trocando só o avatar. A estrutura de edição é medida
+          do arquivo — faixas em pixel, cortes em segundo — não estimada no olho.
+        </p>
+      </header>
+
+      <WorkerStatus temFila={rodando} />
+
+      <NovaRodada />
+
+      <AutoRefresh ativo={rodando} />
+
+      <section className="space-y-4">
+        {jobs.length === 0 ? (
+          <p className="text-sm text-neutral-500">Nenhuma rodada ainda.</p>
+        ) : (
+          jobs.map((j) => <JobCard key={j.id} job={j} />)
+        )}
+      </section>
+    </main>
+  );
+}
