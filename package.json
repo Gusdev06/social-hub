@@ -11,8 +11,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "connect:ig": "tsx --env-file=.env.local scripts/connect-instagram.ts",
-    "worker": "tsx --env-file=.env.local worker/index.ts"
+    "connect:ig": "tsx --env-file=.env.local scripts/connect-instagram.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",
