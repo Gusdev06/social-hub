@@ -41,7 +41,10 @@ export default async function Dashboard() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <SectionLabel>Perfis</SectionLabel>
+        <div className="flex items-baseline justify-between gap-4">
+          <SectionLabel>Perfis</SectionLabel>
+          <span data-numeric className="text-xs text-ash">{accounts.length}</span>
+        </div>
         {accounts.length === 0 ? (
           <Empty>
             <EmptyHeader>
@@ -49,9 +52,9 @@ export default async function Dashboard() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="stagger -mx-2.5 flex flex-col">
+          <div className="stagger flex flex-col divide-y divide-hairline-soft overflow-hidden rounded-lg border bg-card">
             {accounts.map((a) => (
-              <div key={a.id} className="cmd-row">
+              <div key={a.id} className="cmd-row rounded-none px-4 py-2.5">
                 {/* avatar + username: requisito duro da auditoria do TikTok */}
                 <Avatar className="size-6">
                   <AvatarImage src={a.avatarUrl ?? undefined} alt="" />
@@ -73,7 +76,10 @@ export default async function Dashboard() {
       </section>
 
       <section className="flex flex-col gap-2">
-        <SectionLabel>Comentários recentes</SectionLabel>
+        <div className="flex items-baseline justify-between gap-4">
+          <SectionLabel>Comentários recentes</SectionLabel>
+          <span data-numeric className="text-xs text-ash">últimos {recent.length}</span>
+        </div>
         {recent.length === 0 ? (
           <Empty>
             <EmptyHeader>
@@ -81,9 +87,9 @@ export default async function Dashboard() {
             </EmptyHeader>
           </Empty>
         ) : (
-          <div className="stagger -mx-2.5 flex flex-col">
+          <div className="stagger flex flex-col divide-y divide-hairline-soft overflow-hidden rounded-lg border bg-card">
             {recent.map((e) => (
-              <div key={e.id} className="cmd-row text-muted-foreground">
+              <div key={e.id} className="cmd-row rounded-none px-4 py-2.5 text-muted-foreground">
                 <StatusDot status={e.status} />
                 <span className="shrink-0 text-foreground">
                   @{e.fromUsername ?? e.fromUserId}

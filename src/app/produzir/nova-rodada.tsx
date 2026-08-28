@@ -1,5 +1,6 @@
 "use client";
 
+import { FilmIcon } from "lucide-react";
 import { useActionState, useRef, useState } from "react";
 import { signUploadAction } from "../compose/actions";
 import { MODELOS_VIDEO, MODELO_PADRAO, custoClipe } from "@/lib/modelos-video";
@@ -14,6 +15,7 @@ import {
   FieldGroup,
   FieldLabel,
   FieldLegend,
+  FieldSeparator,
   FieldSet,
   FieldTitle,
 } from "@/components/ui/field";
@@ -58,8 +60,8 @@ export function NovaRodada({ avatares = [] }: { avatares?: AvatarSalvo[] }) {
           <FieldGroup>
             <input type="hidden" name="refVideoUrl" value={refVideoUrl} />
 
-            <Field>
-              <FieldTitle>Criativo de referência</FieldTitle>
+            <FieldSet>
+              <FieldLegend variant="label">Criativo de referência</FieldLegend>
               <FieldDescription>
                 O anúncio que já provou converter. O roteiro, o ritmo e a edição dele são o ativo —
                 só o rosto vai mudar.
@@ -76,10 +78,16 @@ export function NovaRodada({ avatares = [] }: { avatares?: AvatarSalvo[] }) {
                 <Button
                   type="button"
                   variant="outline"
-                  className="h-auto w-full border-dashed py-8"
+                  className="h-auto w-full flex-col gap-1.5 border-dashed py-7"
                   onClick={() => inputRef.current?.click()}
                 >
-                  {subindo ?? "Escolher vídeo (.mp4)"}
+                  <FilmIcon className="size-5 text-ash" />
+                  <span>{subindo ?? "Escolher vídeo (.mp4)"}</span>
+                  {!subindo && (
+                    <span className="text-xs font-normal text-ash">
+                      vai direto pro Storage, sem passar pela Vercel
+                    </span>
+                  )}
                 </Button>
               )}
               <input
@@ -92,36 +100,48 @@ export function NovaRodada({ avatares = [] }: { avatares?: AvatarSalvo[] }) {
                   if (f) void subir(f);
                 }}
               />
-            </Field>
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field>
-                <FieldLabel htmlFor="name">Nome da rodada</FieldLabel>
-                <Input id="name" name="name" placeholder="sophia-jones → homem 38" />
-              </Field>
-              <Field data-disabled={Boolean(avatarId)}>
-                <FieldLabel htmlFor="castingBrief">Avatar novo</FieldLabel>
-                <Input
-                  id="castingBrief"
-                  name="castingBrief"
-                  placeholder={
-                    avatarId
-                      ? "não é usado com avatar salvo"
-                      : "homem brasileiro, 37, barba curta, camiseta azul-marinho, sofá"
-                  }
-                  disabled={Boolean(avatarId)}
-                />
-              </Field>
-            </div>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field>
+                  <FieldLabel htmlFor="name">Nome da rodada</FieldLabel>
+                  <Input id="name" name="name" placeholder="sophia-jones → homem 38" />
+                </Field>
+                <Field data-disabled={Boolean(avatarId)}>
+                  <FieldLabel htmlFor="castingBrief">Avatar novo</FieldLabel>
+                  <Input
+                    id="castingBrief"
+                    name="castingBrief"
+                    placeholder={
+                      avatarId
+                        ? "não é usado com avatar salvo"
+                        : "homem brasileiro, 37, barba curta, camiseta azul-marinho"
+                    }
+                    disabled={Boolean(avatarId)}
+                  />
+                </Field>
+              </div>
+            </FieldSet>
+
+            <FieldSeparator />
 
             {avatares.length > 0 && (
               <FieldSet>
                 <FieldLegend variant="label">Avatar</FieldLegend>
-                <FieldDescription>
-                  Reusar um avatar salvo mantém o mesmo personagem entre criativos e pula a
-                  geração do rosto. Vai junto a nota de casting, que é o que segura a identidade
-                  entre um clipe e outro.
-                </FieldDescription>
+                <div className="flex items-start justify-between gap-4">
+                  <FieldDescription>
+                    Reusar um avatar salvo mantém o mesmo personagem entre criativos e pula a
+                    geração do rosto — a nota de casting vai junto.
+                  </FieldDescription>
+                  <Button
+                    variant="link"
+                    size="xs"
+                    className="shrink-0 text-muted-foreground"
+                    render={<a href="/avatares" />}
+                    nativeButton={false}
+                  >
+                    gerenciar
+                  </Button>
+                </div>
 
                 <RadioGroup
                   name="avatarId"
@@ -157,23 +177,16 @@ export function NovaRodada({ avatares = [] }: { avatares?: AvatarSalvo[] }) {
                   ))}
                 </RadioGroup>
 
-                <Button
-                  variant="link"
-                  size="xs"
-                  className="self-start text-muted-foreground"
-                  render={<a href="/avatares" />}
-                  nativeButton={false}
-                >
-                  gerenciar avatares
-                </Button>
               </FieldSet>
             )}
+
+            <FieldSeparator />
 
             <FieldSet>
               <FieldLegend variant="label">Modelo de vídeo</FieldLegend>
               <FieldDescription>
-                Quem gera os clipes do avatar. Fica fixo na rodada — cada clipe nasce do último
-                frame do anterior, e trocar no meio quebraria o rosto na emenda.
+                Fica fixo na rodada: cada clipe nasce do último frame do anterior, e trocar no
+                meio quebraria o rosto na emenda.
               </FieldDescription>
 
               <RadioGroup
@@ -205,7 +218,12 @@ export function NovaRodada({ avatares = [] }: { avatares?: AvatarSalvo[] }) {
               </Alert>
             )}
 
-            <Field orientation="horizontal">
+            <FieldSeparator />
+
+            <Field orientation="horizontal" className="items-center justify-between">
+              <FieldDescription className="m-0">
+                Nada é cobrado até a estrutura ser aprovada.
+              </FieldDescription>
               <Button type="submit" size="lg" disabled={pending || !refVideoUrl}>
                 {pending ? "Criando…" : "Analisar estrutura"}
               </Button>

@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Field,
@@ -13,6 +14,7 @@ import {
   FieldGroup,
   FieldLabel,
   FieldLegend,
+  FieldSeparator,
   FieldSet,
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
@@ -111,29 +113,31 @@ export function ComposeForm({
 
   return (
     <form action={action}>
-      <FieldGroup>
-        <FieldSet>
-          <FieldLegend variant="label">Perfis</FieldLegend>
-          <FieldGroup data-slot="checkbox-group">
-            {accounts.map((a) => (
-              <Field key={a.id} orientation="horizontal">
-                <Checkbox
-                  id={`conta-${a.id}`}
-                  name="contas"
-                  value={a.id}
-                  defaultChecked={accounts.length === 1}
-                />
-                <FieldLabel htmlFor={`conta-${a.id}`} className="items-center">
-                  <Avatar className="size-6">
-                    <AvatarImage src={a.avatarUrl ?? undefined} alt="" />
-                    <AvatarFallback>{a.username.slice(0, 2).toUpperCase()}</AvatarFallback>
-                  </Avatar>
-                  @{a.username}
-                  <Badge variant="outline">{a.platform}</Badge>
-                </FieldLabel>
-              </Field>
-            ))}
-          </FieldGroup>
+      <Card>
+        <CardContent>
+          <FieldGroup>
+            <FieldSet>
+              <FieldLegend variant="label">Perfis</FieldLegend>
+              <FieldGroup data-slot="checkbox-group">
+                {accounts.map((a) => (
+                  <Field key={a.id} orientation="horizontal">
+                    <Checkbox
+                      id={`conta-${a.id}`}
+                      name="contas"
+                      value={a.id}
+                      defaultChecked={accounts.length === 1}
+                    />
+                    <FieldLabel htmlFor={`conta-${a.id}`} className="items-center">
+                      <Avatar className="size-6">
+                        <AvatarImage src={a.avatarUrl ?? undefined} alt="" />
+                        <AvatarFallback>{a.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                      </Avatar>
+                      @{a.username}
+                      <Badge variant="outline">{a.platform}</Badge>
+                    </FieldLabel>
+                  </Field>
+                ))}
+              </FieldGroup>
         </FieldSet>
 
         <Field>
@@ -231,7 +235,12 @@ export function ComposeForm({
           </FieldGroup>
         </FieldSet>
 
-        <Field orientation="horizontal">
+        <FieldSeparator />
+
+        <Field orientation="horizontal" className="items-center justify-between">
+          <FieldDescription className="m-0">
+            {agendar ? "Fica na fila até a hora marcada." : "Publica em todos os perfis marcados."}
+          </FieldDescription>
           <Button type="submit" size="lg" disabled={pending || Boolean(enviando)}>
             {pending ? "Publicando…" : agendar ? "Agendar" : "Publicar agora"}
           </Button>
@@ -243,6 +252,8 @@ export function ComposeForm({
           </Alert>
         )}
       </FieldGroup>
+        </CardContent>
+      </Card>
     </form>
   );
 }
