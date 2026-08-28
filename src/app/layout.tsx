@@ -1,7 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, JetBrains_Mono, Oswald, Playfair_Display, Unbounded } from "next/font/google";
+import { Geist, Inter, JetBrains_Mono, Oswald, Playfair_Display, Unbounded } from "next/font/google";
 import Link from "next/link";
 import "./globals.css";
+import { Toaster } from "@/components/ui/sonner";
+import { cn } from "@/lib/utils";
+
+// Fonte do chrome do app. As cinco de baixo são exclusivas da arte.
+const geist = Geist({ subsets: ["latin"], variable: "--font-sans" });
 
 // As cinco famílias do sistema de design. É por isso que a renderização saiu do
 // canvas pro HTML: canvas não carrega webfont com facilidade, e a tipografia é
@@ -14,29 +19,42 @@ const oswald = Oswald({ subsets: ["latin"], variable: "--font-oswald", weight: [
 
 const FONTES = [unbounded, playfair, inter, jetbrains, oswald].map((f) => f.variable).join(" ");
 
+const NAV = [
+  { href: "/", label: "Painel" },
+  { href: "/posts", label: "Publicações" },
+  { href: "/automations", label: "Automações" },
+  { href: "/replicar", label: "Replicar" },
+  { href: "/produzir", label: "Produzir" },
+  { href: "/compose", label: "Novo post" },
+];
+
 export const metadata: Metadata = {
   title: "Social Hub",
   description: "Automação de DM e publicação multi-perfil (Instagram + TikTok)",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
+  // O painel é dark-only: a classe fica fixa aqui em vez de instalar next-themes,
+  // que forçaria um client boundary no root e quebraria os `db.select()` das páginas.
   return (
-    <html lang="pt-BR" className={FONTES}>
+    <html lang="pt-BR" className={cn("dark font-sans", FONTES, geist.variable)}>
       <body>
-        <nav className="border-b border-neutral-900">
-          <div className="mx-auto max-w-5xl px-6 flex items-center gap-6 h-14">
-            <Link href="/" className="font-semibold text-sm">Social Hub</Link>
-            <div className="flex gap-4 text-sm text-neutral-400">
-              <Link href="/" className="hover:text-neutral-100">Painel</Link>
-              <Link href="/posts" className="hover:text-neutral-100">Publicações</Link>
-              <Link href="/automations" className="hover:text-neutral-100">Automações</Link>
-              <Link href="/replicar" className="hover:text-neutral-100">Replicar</Link>
-              <Link href="/produzir" className="hover:text-neutral-100">Produzir</Link>
-              <Link href="/compose" className="hover:text-neutral-100">Novo post</Link>
+        <nav className="border-b">
+          <div className="mx-auto flex h-14 max-w-5xl items-center gap-6 px-6">
+            <Link href="/" className="text-sm font-semibold">
+              Social Hub
+            </Link>
+            <div className="flex gap-4 text-sm text-muted-foreground">
+              {NAV.map((item) => (
+                <Link key={item.href} href={item.href} className="transition-colors hover:text-foreground">
+                  {item.label}
+                </Link>
+              ))}
             </div>
           </div>
         </nav>
         {children}
+        <Toaster theme="dark" position="top-right" />
       </body>
     </html>
   );

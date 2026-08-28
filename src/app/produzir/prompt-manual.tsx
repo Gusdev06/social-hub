@@ -1,6 +1,14 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Field, FieldDescription } from "@/components/ui/field";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { SectionLabel } from "@/components/section-label";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 /**
  * O prompt de registro de um clipe — o texto que vai mesmo pro modelo de vídeo.
@@ -27,94 +35,105 @@ export function PromptManual({
 }) {
   const [v, setV] = useState(prompt);
   const [aberto, setAberto] = useState(false);
-  const [vendoEnvio, setVendoEnvio] = useState(false);
   const [pending, start] = useTransition();
 
   if (!aberto && !portao) {
     return (
-      <button
+      <Button
+        type="button"
+        variant="link"
+        size="xs"
+        className="self-start text-muted-foreground"
         onClick={() => setAberto(true)}
-        className={`text-[11px] underline ${
-          prompt ? "text-neutral-500 hover:text-neutral-300" : "text-neutral-600 hover:text-neutral-400"
-        }`}
       >
         {!prompt
           ? "escrever o prompt à mão"
           : origem === "humano"
             ? "prompt seu — a LLM não é chamada neste clipe"
             : "ver o prompt usado"}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className={`mt-1 space-y-2 ${portao ? "rounded border border-amber-900/60 bg-amber-950/10 p-3" : ""}`}>
+    <Field className={cn("mt-1", portao && "rounded-md border border-warning/40 bg-warning/5 p-3")}>
       {portao && (
-        <p className="text-[11px] text-amber-300">
-          Confira o prompt do clipe {n} antes de gerar. Corrija aqui se precisar; depois use
-          “Confirmei — seguir”.
-        </p>
+        <Alert variant="warning" className="border-0 bg-transparent px-0 py-0">
+          <AlertDescription className="text-[11px] text-warning">
+            Confira o prompt do clipe {n} antes de gerar. Corrija aqui se precisar; depois use
+            “Confirmei — seguir”.
+          </AlertDescription>
+        </Alert>
       )}
-      <textarea
+      <Textarea
         value={v}
         onChange={(e) => setV(e.target.value)}
         rows={5}
         placeholder="Seu prompt para este clipe. Preenchido, substitui o escritor de prompt — nenhuma chamada de LLM acontece."
-        className="w-full rounded border border-neutral-800 bg-transparent p-3 font-mono text-[11px] leading-relaxed"
+        className="p-3 font-mono text-[11px] leading-relaxed"
       />
-      <p className="text-[11px] text-neutral-600">
+      <FieldDescription className="text-[11px]">
         Vale só para o clipe {n}. Vazio devolve o clipe para o escritor automático.
         {origem === "llm" && !portao && " Escrito pela LLM."}
-      </p>
+      </FieldDescription>
 
       {/* O que a LLM RECEBEU. Fica recolhido porque são ~2 KB de texto que só
           importam quando o prompt sai estranho — e aí a pergunta é se ela
           interpretou mal ou se o insumo já chegou errado. */}
       {enviado && (
-        <div>
-          <button
-            type="button"
-            onClick={() => setVendoEnvio((x) => !x)}
-            className="text-[11px] text-neutral-500 underline hover:text-neutral-300"
+        <Collapsible className="flex flex-col gap-1.5">
+          <CollapsibleTrigger
+            render={
+              <Button
+                type="button"
+                variant="link"
+                size="xs"
+                className="self-start text-muted-foreground"
+              />
+            }
           >
-            {vendoEnvio ? "esconder" : "ver"} o que foi enviado para a {enviado.modelo}
-          </button>
-
-          {vendoEnvio && (
-            <div className="mt-1.5 space-y-2 rounded border border-neutral-900 bg-neutral-950/60 p-2.5">
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-neutral-600">instruções</p>
-                <pre className="mt-0.5 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-neutral-500">
+            ver o que foi enviado para a {enviado.modelo}
+          </CollapsibleTrigger>
+          <CollapsibleContent className="flex flex-col gap-2 rounded-md border bg-muted/30 p-2.5">
+            <div className="flex flex-col gap-0.5">
+              <SectionLabel tamanho="sm">instruções</SectionLabel>
+              <ScrollArea className="max-h-48">
+                <pre className="font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
                   {enviado.sistema}
                 </pre>
-              </div>
-              <div>
-                <p className="text-[10px] uppercase tracking-wide text-neutral-600">
-                  nota de casting + a fala deste clipe
-                </p>
-                <pre className="mt-0.5 whitespace-pre-wrap font-mono text-[10px] leading-relaxed text-neutral-400">
+              </ScrollArea>
+            </div>
+            <div className="flex flex-col gap-0.5">
+              <SectionLabel tamanho="sm">nota de casting + a fala deste clipe</SectionLabel>
+              <ScrollArea className="max-h-48">
+                <pre className="font-mono text-[10px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
                   {enviado.usuario}
                 </pre>
-              </div>
+              </ScrollArea>
             </div>
-          )}
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       )}
+
       <div className="flex gap-2">
-        <button
+        <Button
+          type="button"
+          size="xs"
+          variant="secondary"
           disabled={pending || v.trim() === prompt.trim()}
           onClick={() => start(async () => { await acao(id, n, v); setAberto(false); })}
-          className="rounded bg-neutral-100 px-3 py-1.5 text-[11px] font-medium text-neutral-950 disabled:opacity-40"
         >
           {pending ? "salvando…" : "Salvar"}
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant="outline"
           onClick={() => { setV(prompt); setAberto(false); }}
-          className="rounded border border-neutral-800 px-3 py-1.5 text-[11px]"
         >
           cancelar
-        </button>
+        </Button>
       </div>
-    </div>
+    </Field>
   );
 }

@@ -2,7 +2,29 @@
 
 import { useActionState, useRef, useState } from "react";
 import { publishAction, signUploadAction, type PublishState } from "./actions";
-
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Field,
+  FieldDescription,
+  FieldGroup,
+  FieldLabel,
+  FieldLegend,
+  FieldSet,
+} from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * A Content Publishing API do Instagram so aceita JPEG em foto — PNG e WebP
@@ -31,6 +53,12 @@ async function paraJpeg(file: File): Promise<File> {
 }
 
 type Account = { id: string; username: string; platform: string; avatarUrl: string | null };
+
+const TIPOS = [
+  { label: "Imagem", value: "image" },
+  { label: "Carrossel (2+ imagens)", value: "carousel" },
+  { label: "Reel / vídeo", value: "reel" },
+];
 
 export function ComposeForm({
   accounts,
@@ -82,146 +110,139 @@ export function ComposeForm({
   }
 
   return (
-    <form action={action} className="space-y-6">
-      <Field label="Perfis">
-        <div className="space-y-2">
-          {accounts.map((a) => (
-            <label key={a.id} className="flex items-center gap-3 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                name="contas"
-                value={a.id}
-                defaultChecked={accounts.length === 1}
-                className="size-4 accent-neutral-300"
-              />
-              {a.avatarUrl && <img src={a.avatarUrl} alt="" className="size-6 rounded-full" />}
-              <span>@{a.username}</span>
-              <span className="text-xs text-neutral-600">{a.platform}</span>
-            </label>
-          ))}
-        </div>
-      </Field>
-
-      <Field label="Tipo">
-        <select
-          name="mediaType"
-          value={mediaType}
-          onChange={(e) => setMediaType(e.target.value)}
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm"
-        >
-          <option value="image">Imagem</option>
-          <option value="carousel">Carrossel (2+ imagens)</option>
-          <option value="reel">Reel / vídeo</option>
-        </select>
-      </Field>
-
-      <Field label="Mídia">
-        {uploadEnabled ? (
-          <div className="space-y-3">
-            <input
-              ref={inputRef}
-              type="file"
-              multiple={mediaType === "carousel"}
-              accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
-              onChange={(e) => handleFiles(e.target.files)}
-              disabled={Boolean(enviando)}
-              className="block w-full text-sm text-neutral-400 file:mr-3 file:rounded file:border-0 file:bg-neutral-800 file:px-3 file:py-1.5 file:text-sm file:text-neutral-100 hover:file:bg-neutral-700"
-            />
-            {enviando && <p className="text-xs text-amber-400">Enviando {enviando}…</p>}
-            {erroUpload && <p className="text-xs text-red-400">{erroUpload}</p>}
-          </div>
-        ) : (
-          <p className="text-xs text-amber-500 mb-2">
-            Upload desligado (falta a service_role key). Cole URLs https públicas abaixo.
-          </p>
-        )}
-      </Field>
-
-      <Field
-        label="URLs da mídia"
-        hint={
-          mediaType === "carousel"
-            ? "Uma URL por linha, na ordem dos slides. O upload preenche sozinho."
-            : "Preenchido pelo upload. Imagens são convertidas pra JPEG automaticamente — o Instagram só aceita esse formato."
-        }
-      >
-        <textarea
-          name="mediaUrls"
-          value={urls}
-          onChange={(e) => setUrls(e.target.value)}
-          rows={mediaType === "carousel" ? 5 : 2}
-          placeholder="https://..."
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-mono"
-        />
-        {urls.trim() && (
-          <div className="flex gap-2 mt-3 flex-wrap">
-            {urls.split("\n").filter(Boolean).map((u, i) => (
-              <img
-                key={i}
-                src={u.trim()}
-                alt=""
-                className="size-16 rounded object-cover border border-neutral-800"
-              />
+    <form action={action}>
+      <FieldGroup>
+        <FieldSet>
+          <FieldLegend variant="label">Perfis</FieldLegend>
+          <FieldGroup data-slot="checkbox-group">
+            {accounts.map((a) => (
+              <Field key={a.id} orientation="horizontal">
+                <Checkbox
+                  id={`conta-${a.id}`}
+                  name="contas"
+                  value={a.id}
+                  defaultChecked={accounts.length === 1}
+                />
+                <FieldLabel htmlFor={`conta-${a.id}`} className="items-center">
+                  <Avatar className="size-6">
+                    <AvatarImage src={a.avatarUrl ?? undefined} alt="" />
+                    <AvatarFallback>{a.username.slice(0, 2).toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  @{a.username}
+                  <Badge variant="outline">{a.platform}</Badge>
+                </FieldLabel>
+              </Field>
             ))}
-          </div>
-        )}
-      </Field>
+          </FieldGroup>
+        </FieldSet>
 
-      <Field label="Legenda">
-        <textarea
-          name="caption"
-          rows={5}
-          maxLength={2200}
-          className="w-full rounded border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm"
-        />
-      </Field>
+        <Field>
+          <FieldLabel htmlFor="tipo">Tipo</FieldLabel>
+          <Select
+            items={TIPOS}
+            name="mediaType"
+            value={mediaType}
+            onValueChange={(v) => setMediaType(v as string)}
+          >
+            <SelectTrigger id="tipo" className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {TIPOS.map((t) => (
+                  <SelectItem key={t.value} value={t.value}>
+                    {t.label}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
+        </Field>
 
-      <Field label="Quando">
-        <label className="flex items-center gap-2 text-sm mb-2 cursor-pointer">
-          <input
-            type="checkbox"
-            checked={agendar}
-            onChange={(e) => setAgendar(e.target.checked)}
-            className="size-4 accent-neutral-300"
+        <Field>
+          <FieldLabel htmlFor="midia">Mídia</FieldLabel>
+          {uploadEnabled ? (
+            <>
+              <Input
+                id="midia"
+                ref={inputRef}
+                type="file"
+                multiple={mediaType === "carousel"}
+                accept="image/jpeg,image/png,image/webp,video/mp4,video/quicktime"
+                onChange={(e) => handleFiles(e.target.files)}
+                disabled={Boolean(enviando)}
+              />
+              {enviando && <FieldDescription className="text-warning">Enviando {enviando}…</FieldDescription>}
+              {erroUpload && <FieldDescription className="text-destructive">{erroUpload}</FieldDescription>}
+            </>
+          ) : (
+            <Alert variant="warning">
+              <AlertDescription>
+                Upload desligado (falta a service_role key). Cole URLs https públicas abaixo.
+              </AlertDescription>
+            </Alert>
+          )}
+        </Field>
+
+        <Field>
+          <FieldLabel htmlFor="mediaUrls">URLs da mídia</FieldLabel>
+          <FieldDescription>
+            {mediaType === "carousel"
+              ? "Uma URL por linha, na ordem dos slides. O upload preenche sozinho."
+              : "Preenchido pelo upload. Imagens são convertidas pra JPEG automaticamente — o Instagram só aceita esse formato."}
+          </FieldDescription>
+          <Textarea
+            id="mediaUrls"
+            name="mediaUrls"
+            value={urls}
+            onChange={(e) => setUrls(e.target.value)}
+            rows={mediaType === "carousel" ? 5 : 2}
+            placeholder="https://..."
+            className="font-mono text-xs"
           />
-          Agendar em vez de publicar agora
-        </label>
-        {agendar && (
-          <input
-            type="datetime-local"
-            name="scheduledFor"
-            required
-            className="rounded border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm"
-          />
-        )}
-      </Field>
+          {urls.trim() && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {urls.split("\n").filter(Boolean).map((u, i) => (
+                <img key={i} src={u.trim()} alt="" className="size-16 rounded-md border object-cover" />
+              ))}
+            </div>
+          )}
+        </Field>
 
-      <div className="flex items-center gap-4">
-        <button
-          type="submit"
-          disabled={pending || Boolean(enviando)}
-          className="rounded bg-neutral-100 text-neutral-900 px-4 py-2 text-sm font-medium disabled:opacity-40"
-        >
-          {pending ? "Publicando…" : agendar ? "Agendar" : "Publicar agora"}
-        </button>
+        <Field>
+          <FieldLabel htmlFor="caption">Legenda</FieldLabel>
+          <Textarea id="caption" name="caption" rows={5} maxLength={2200} />
+        </Field>
+
+        <FieldSet>
+          <FieldLegend variant="label">Quando</FieldLegend>
+          <FieldGroup>
+            <Field orientation="horizontal">
+              <Checkbox
+                id="agendar"
+                checked={agendar}
+                onCheckedChange={(v) => setAgendar(Boolean(v))}
+              />
+              <FieldLabel htmlFor="agendar">Agendar em vez de publicar agora</FieldLabel>
+            </Field>
+            {agendar && (
+              <Input type="datetime-local" name="scheduledFor" required className="w-fit" />
+            )}
+          </FieldGroup>
+        </FieldSet>
+
+        <Field orientation="horizontal">
+          <Button type="submit" size="lg" variant="secondary" disabled={pending || Boolean(enviando)}>
+            {pending ? "Publicando…" : agendar ? "Agendar" : "Publicar agora"}
+          </Button>
+        </Field>
+
         {state && (
-          <p className={`text-sm ${state.ok ? "text-emerald-400" : "text-red-400"}`}>
-            {state.message}
-          </p>
+          <Alert variant={state.ok ? "default" : "destructive"}>
+            <AlertDescription>{state.message}</AlertDescription>
+          </Alert>
         )}
-      </div>
+      </FieldGroup>
     </form>
-  );
-}
-
-function Field({
-  label, hint, children,
-}: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <div>
-      <label className="block text-sm font-medium mb-1">{label}</label>
-      {hint && <p className="text-xs text-neutral-600 mb-2">{hint}</p>}
-      {children}
-    </div>
   );
 }

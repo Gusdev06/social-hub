@@ -1,5 +1,21 @@
 import { apagarAvatarAction, listarAvatares } from "../produzir/actions";
 import { requireDashboardAuth } from "@/lib/auth";
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export const dynamic = "force-dynamic";
 
@@ -19,40 +35,44 @@ export default async function Avatares() {
   const acervo = await listarAvatares();
 
   return (
-    <main className="mx-auto max-w-5xl p-6 space-y-6">
-      <header className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-lg font-semibold">Avatares salvos</h1>
-          <p className="mt-0.5 text-xs text-neutral-500">
+    <PageShell>
+      <PageHeader className="flex-row items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <PageTitle className="text-lg">Avatares salvos</PageTitle>
+          <PageDescription className="text-xs">
             {acervo.length === 0
               ? "Nenhum ainda."
               : `${acervo.length} personagem(ns) prontos para reusar`}
-          </p>
+          </PageDescription>
         </div>
-        <a href="/produzir" className="text-xs text-neutral-400 underline hover:text-neutral-200">
+        <Button variant="link" size="sm" render={<a href="/produzir" />} nativeButton={false}>
           ir para a esteira
-        </a>
-      </header>
+        </Button>
+      </PageHeader>
 
       {acervo.length === 0 ? (
-        <p className="rounded-lg border border-neutral-900 p-8 text-center text-sm text-neutral-500">
-          Quando uma rodada gerar um rosto que você quer manter, use
-          <br />
-          <span className="text-neutral-300">“salvar este avatar para reusar”</span> no card dela.
-        </p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>Nenhum avatar no acervo</EmptyTitle>
+            <EmptyDescription>
+              Quando uma rodada gerar um rosto que você quer manter, use “salvar este avatar para
+              reusar” no card dela.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
-        <div className="space-y-3">
+        <div className="flex flex-col gap-3">
           {acervo.map((a) => (
-            <div key={a.id} className="flex gap-4 rounded-lg border border-neutral-900 p-4">
+            <Card key={a.id} className="flex-row gap-4 p-4">
               <img
                 src={a.imagemUrl}
                 alt={a.nome}
-                className="h-40 w-24 shrink-0 rounded border border-neutral-800 object-cover"
+                className="h-40 w-24 shrink-0 rounded-md border object-cover"
               />
-              <div className="min-w-0 flex-1 space-y-2">
-                <div>
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                <div className="flex flex-col gap-0.5">
                   <h2 className="text-sm font-medium">{a.nome}</h2>
-                  <p className="text-[11px] text-neutral-500">
+                  <p className="text-[11px] text-muted-foreground">
                     salvo em {quando(a.criadoEm)} ·{" "}
                     {a.usos === 0 ? "nunca usado" : `usado em ${a.usos} rodada(s)`}
                   </p>
@@ -60,25 +80,41 @@ export default async function Avatares() {
 
                 {/* A nota inteira, não um resumo: é o contrato de identidade do
                     personagem, e conferir antes de reusar custa segundos. */}
-                <pre className="whitespace-pre-wrap font-mono text-[11px] leading-relaxed text-neutral-400">
-                  {a.nota}
-                </pre>
+                <ScrollArea className="max-h-40">
+                  <pre className="font-mono text-[11px] leading-relaxed whitespace-pre-wrap text-muted-foreground">
+                    {a.nota}
+                  </pre>
+                </ScrollArea>
 
-                <form action={apagarAvatarAction.bind(null, a.id)}>
-                  <button className="rounded border border-neutral-900 px-2.5 py-1 text-[11px] text-neutral-500 hover:border-red-900/60 hover:text-red-300">
+                <AlertDialog>
+                  <AlertDialogTrigger
+                    render={<Button variant="ghost" size="xs" className="self-start text-muted-foreground" />}
+                  >
                     apagar do acervo
-                  </button>
-                </form>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Apagar “{a.nome}” do acervo?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Remove só o registro. A imagem continua no Storage e as rodadas que já
+                        usaram esse avatar seguem apontando para ela.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <form action={apagarAvatarAction.bind(null, a.id)}>
+                        <AlertDialogAction type="submit" variant="destructive">
+                          Apagar
+                        </AlertDialogAction>
+                      </form>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               </div>
-            </div>
+            </Card>
           ))}
         </div>
       )}
-
-      <p className="text-[11px] text-neutral-600">
-        Apagar remove só o registro. A imagem continua no Storage — as rodadas que já usaram
-        esse avatar seguem apontando para ela.
-      </p>
-    </main>
+    </PageShell>
   );
 }

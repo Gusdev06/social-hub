@@ -1,6 +1,8 @@
 import { desc } from "drizzle-orm";
+import { CircleIcon, TriangleAlertIcon } from "lucide-react";
 import { db } from "@/db";
 import { workerHeartbeat } from "@/db/schema";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 /** Duas voltas de folga do loop de 5s — abaixo disso é oscilação, não queda. */
 const LIMITE_MS = 30_000;
@@ -22,30 +24,26 @@ export async function WorkerStatus({ temFila }: { temFila: boolean }) {
 
   if (online) {
     return (
-      <p className="text-xs text-emerald-400">
-        ● worker de pé{ponto?.ultimoPasso ? ` · último passo: ${ponto.ultimoPasso}` : ""}
+      <p className="flex items-center gap-1.5 text-xs text-success">
+        <CircleIcon className="size-2 fill-current" />
+        worker de pé{ponto?.ultimoPasso ? ` · último passo: ${ponto.ultimoPasso}` : ""}
       </p>
     );
   }
 
   return (
-    <div
-      className={`rounded-lg border p-4 text-sm ${
-        temFila
-          ? "border-amber-900/60 bg-amber-950/20"
-          : "border-neutral-900 bg-neutral-950"
-      }`}
-    >
-      <p className={temFila ? "font-medium text-amber-300" : "text-neutral-400"}>
+    <Alert variant={temFila ? "warning" : "default"}>
+      <TriangleAlertIcon />
+      <AlertTitle>
         {temFila
           ? "Tem rodada esperando e o worker está fora — nada vai andar."
           : "Worker fora do ar."}
-      </p>
-      <p className="mt-1 text-neutral-400">
+      </AlertTitle>
+      <AlertDescription>
         A esteira roda na sua máquina. Abra o terminal na pasta do projeto e rode{" "}
-        <code className="rounded bg-neutral-900 px-1.5 py-0.5 text-neutral-200">npm run worker</code>.
-        Ele retoma sozinho de onde parou.
-      </p>
-    </div>
+        <code className="rounded bg-muted px-1.5 py-0.5 text-foreground">npm run worker</code>. Ele
+        retoma sozinho de onde parou.
+      </AlertDescription>
+    </Alert>
   );
 }

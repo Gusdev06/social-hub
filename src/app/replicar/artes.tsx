@@ -1,10 +1,20 @@
 "use client";
 
+import { PlusIcon } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { signUploadAction } from "../compose/actions";
 import { salvarRascunho } from "./actions";
 import { canvasParaBlob, desenharSlide, TEMAS, type Slide } from "@/lib/slides";
 import type { PostGerado } from "@/lib/claude";
+import { SectionLabel } from "@/components/section-label";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import { Slider } from "@/components/ui/slider";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 
 export function Artes({
   post, handle, referencias,
@@ -76,68 +86,108 @@ export function Artes({
   }
 
   return (
-    <div className="space-y-5">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">4 · Artes</h2>
-        <div className="flex gap-2">
+        <SectionLabel>4 · Artes</SectionLabel>
+        <ToggleGroup
+          value={[temaId]}
+          onValueChange={(v) => {
+            const k = (v as string[])[0];
+            if (k) setTemaId(k as keyof typeof TEMAS);
+          }}
+        >
           {(Object.keys(TEMAS) as (keyof typeof TEMAS)[]).map((k) => (
-            <button key={k} onClick={() => setTemaId(k)}
-              className={`rounded-lg border px-3 py-1.5 text-xs ${
-                k === temaId ? "border-neutral-500 text-neutral-100" : "border-neutral-800 text-neutral-500"
-              }`}>{TEMAS[k].nome}</button>
+            <ToggleGroupItem key={k} value={k}>
+              {TEMAS[k].nome}
+            </ToggleGroupItem>
           ))}
-        </div>
+        </ToggleGroup>
       </div>
 
       <div className="flex flex-wrap gap-6">
         {/* preview + navegação */}
-        <div className="w-[300px] shrink-0 space-y-3">
-          <canvas ref={previewRef} className="w-full rounded-xl border border-neutral-800" />
-          <div className="flex flex-wrap gap-1">
-            {slides.map((_, i) => (
-              <button key={i} onClick={() => setAtivo(i)}
-                className={`size-8 rounded text-xs ${
-                  i === ativo ? "bg-neutral-100 text-neutral-900" : "bg-neutral-800 text-neutral-400"
-                }`}>{i + 1}</button>
-            ))}
-            <button onClick={() => setSlides((a) => [...a, { titulo: "Novo slide", corpo: "" }])}
-              className="size-8 rounded border border-dashed border-neutral-700 text-neutral-500">+</button>
+        <div className="flex w-[300px] shrink-0 flex-col gap-3">
+          <canvas ref={previewRef} className="w-full rounded-xl border" />
+          <div className="flex flex-wrap items-center gap-1">
+            <ToggleGroup
+              value={[String(ativo)]}
+              onValueChange={(v) => {
+                const i = (v as string[])[0];
+                if (i != null) setAtivo(Number(i));
+              }}
+            >
+              {slides.map((_, i) => (
+                <ToggleGroupItem key={i} value={String(i)} aria-label={`Slide ${i + 1}`}>
+                  {i + 1}
+                </ToggleGroupItem>
+              ))}
+            </ToggleGroup>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon-sm"
+              aria-label="Adicionar slide"
+              className="border-dashed"
+              onClick={() => setSlides((a) => [...a, { titulo: "Novo slide", corpo: "" }])}
+            >
+              <PlusIcon />
+            </Button>
           </div>
         </div>
 
         {/* editor */}
-        <div className="flex-1 min-w-[320px] space-y-4">
-          <input
-            value={s?.titulo ?? ""} onChange={(e) => editar("titulo", e.target.value)}
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm font-medium"
+        <div className="flex min-w-[320px] flex-1 flex-col gap-4">
+          <Input
+            value={s?.titulo ?? ""}
+            onChange={(e) => editar("titulo", e.target.value)}
+            className="font-medium"
             placeholder="Título do slide"
           />
-          <textarea
-            value={s?.corpo ?? ""} onChange={(e) => editar("corpo", e.target.value)} rows={4}
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm"
+          <Textarea
+            value={s?.corpo ?? ""}
+            onChange={(e) => editar("corpo", e.target.value)}
+            rows={4}
             placeholder="Corpo (pode ficar vazio na capa)"
           />
 
           {/* fundo */}
-          <div className="rounded-lg border border-neutral-800 p-3 space-y-3">
+          <div className="flex flex-col gap-3 rounded-lg border p-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium uppercase tracking-wide text-neutral-500">Fundo</span>
+              <SectionLabel>Fundo</SectionLabel>
               {s?.imagem && (
-                <button onClick={() => editar("imagem", undefined)}
-                  className="text-xs text-neutral-500 hover:text-red-400">remover imagem</button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="xs"
+                  className="text-muted-foreground"
+                  onClick={() => editar("imagem", undefined)}
+                >
+                  remover imagem
+                </Button>
               )}
             </div>
 
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => fileRef.current?.click()}
-                className="flex size-14 items-center justify-center rounded border border-dashed border-neutral-700 text-xs text-neutral-500">
+              <Button
+                type="button"
+                variant="outline"
+                className="size-14 border-dashed text-xs"
+                onClick={() => fileRef.current?.click()}
+              >
                 + subir
-              </button>
+              </Button>
               {referencias.map((u) => (
-                <button key={u} onClick={() => editar("imagem", u)}
-                  className={`size-14 overflow-hidden rounded border-2 ${
-                    s?.imagem === u ? "border-blue-500" : "border-transparent opacity-60 hover:opacity-100"
-                  }`}>
+                <button
+                  key={u}
+                  type="button"
+                  onClick={() => editar("imagem", u)}
+                  className={cn(
+                    "size-14 overflow-hidden rounded-md border-2 transition-opacity",
+                    s?.imagem === u
+                      ? "border-primary"
+                      : "border-transparent opacity-60 hover:opacity-100",
+                  )}
+                >
                   <img src={u} alt="" className="size-full object-cover" />
                 </button>
               ))}
@@ -163,37 +213,53 @@ export function Artes({
             onChange={(v) => editar("escala", v)} />
 
           {slides.length > 1 && (
-            <button onClick={() => { setSlides((a) => a.filter((_, j) => j !== ativo)); setAtivo((a) => Math.max(0, a - 1)); }}
-              className="text-xs text-neutral-500 hover:text-red-400">Remover este slide</button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              className="self-start text-muted-foreground"
+              onClick={() => {
+                setSlides((a) => a.filter((_, j) => j !== ativo));
+                setAtivo((a) => Math.max(0, a - 1));
+              }}
+            >
+              Remover este slide
+            </Button>
           )}
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={gerarESubir}
-          className="rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900">
+        <Button type="button" size="lg" variant="secondary" onClick={gerarESubir}>
           Gerar as {slides.length} artes
-        </button>
+        </Button>
         {urls.length > 0 && (
-          <button
+          <Button
+            type="button"
+            size="lg"
+            disabled={salvando}
             onClick={() => startSalvar(async () => {
               const r = await salvarRascunho({ ...post, slides }, urls);
               setStatus(r.message);
             })}
-            disabled={salvando}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
+          >
             {salvando ? "Salvando…" : "Mandar pro Novo post"}
-          </button>
+          </Button>
         )}
         {status && (
-          <p className={`text-sm ${status.startsWith("Erro") ? "text-red-400" : "text-emerald-400"}`}>{status}</p>
+          <p className={cn("text-sm", status.startsWith("Erro") ? "text-destructive" : "text-success")}>
+            {status}
+          </p>
         )}
       </div>
 
       {urls.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {urls.map((u, i) => <img key={i} src={u} alt="" className="h-40 rounded border border-neutral-800" />)}
-        </div>
+        <ScrollArea className="w-full">
+          <div className="flex gap-2 pb-2">
+            {urls.map((u, i) => <img key={i} src={u} alt="" className="h-40 rounded-md border" />)}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       )}
     </div>
   );
@@ -205,17 +271,23 @@ function Faixa({
   label: string; valor: number; min: number; max: number; passo: number;
   onChange: (v: number) => void; dica?: string;
 }) {
+  const id = `faixa-${label.replace(/\s+/g, "-").toLowerCase()}`;
   return (
-    <div>
-      <div className="mb-1 flex justify-between text-xs">
-        <span className="text-neutral-400">{label}</span>
-        <span className="tabular-nums text-neutral-600">{valor.toFixed(2)}</span>
+    <Field>
+      <div className="flex justify-between text-xs">
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        <span className="tabular-nums text-muted-foreground">{valor.toFixed(2)}</span>
       </div>
-      <input type="range" min={min} max={max} step={passo} value={valor}
-        onChange={(e) => onChange(Number(e.target.value))}
-        className="w-full accent-neutral-300" />
-      {dica && <p className="mt-1 text-xs text-neutral-600">{dica}</p>}
-    </div>
+      <Slider
+        id={id}
+        min={min}
+        max={max}
+        step={passo}
+        value={valor}
+        onValueChange={(v) => onChange(v as number)}
+      />
+      {dica && <FieldDescription className="text-xs">{dica}</FieldDescription>}
+    </Field>
   );
 }
 
@@ -225,16 +297,22 @@ function Grupo({
   label: string; opcoes: [string, string][]; valor: string; onChange: (v: string) => void;
 }) {
   return (
-    <div>
-      <p className="mb-1 text-xs text-neutral-400">{label}</p>
-      <div className="flex gap-1">
+    <Field>
+      <FieldLabel className="text-xs">{label}</FieldLabel>
+      <ToggleGroup
+        value={[valor]}
+        onValueChange={(v) => {
+          const escolha = (v as string[])[0];
+          if (escolha) onChange(escolha);
+        }}
+        className="w-full"
+      >
         {opcoes.map(([v, l]) => (
-          <button key={v} onClick={() => onChange(v)}
-            className={`flex-1 rounded border px-2 py-1.5 text-xs ${
-              valor === v ? "border-neutral-500 text-neutral-100" : "border-neutral-800 text-neutral-500"
-            }`}>{l}</button>
+          <ToggleGroupItem key={v} value={v} className="flex-1">
+            {l}
+          </ToggleGroupItem>
         ))}
-      </div>
-    </div>
+      </ToggleGroup>
+    </Field>
   );
 }

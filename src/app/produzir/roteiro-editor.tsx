@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription } from "@/components/ui/field";
+import { Textarea } from "@/components/ui/textarea";
 
 /**
  * O roteiro é o ativo testado — e o que sai daqui vira US$ 0,56 por clipe no
@@ -20,41 +23,48 @@ export function RoteiroEditor({
 
   if (!aberto) {
     return (
-      <button
+      <Button
+        type="button"
+        variant="link"
+        size="xs"
+        className="self-start text-muted-foreground"
         onClick={() => setAberto(true)}
-        className="text-[11px] text-neutral-500 hover:text-neutral-300 underline"
       >
         corrigir o roteiro
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className="space-y-2">
-      <textarea
+    <Field>
+      <Textarea
         value={v}
         onChange={(e) => setV(e.target.value)}
         rows={6}
-        className="w-full rounded border border-neutral-800 bg-transparent p-3 text-xs leading-relaxed"
+        className="text-xs leading-relaxed"
       />
-      <p className="text-[11px] text-neutral-600">
+      <FieldDescription className="text-[11px]">
         A pontuação define onde os clipes cortam. Refatiar não re-transcreve — custo zero.
-      </p>
+      </FieldDescription>
       <div className="flex gap-2">
-        <button
+        <Button
+          type="button"
+          size="xs"
+          variant="secondary"
           disabled={pending || v.trim() === texto.trim()}
           onClick={() => start(() => acao(id, v))}
-          className="rounded bg-neutral-100 px-3 py-1.5 text-[11px] font-medium text-neutral-950 disabled:opacity-40"
         >
           {pending ? "refatiando…" : "Salvar e refatiar"}
-        </button>
-        <button
+        </Button>
+        <Button
+          type="button"
+          size="xs"
+          variant="outline"
           onClick={() => { setV(texto); setAberto(false); }}
-          className="rounded border border-neutral-800 px-3 py-1.5 text-[11px]"
         >
           cancelar
-        </button>
+        </Button>
       </div>
-    </div>
+    </Field>
   );
 }

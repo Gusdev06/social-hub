@@ -1,6 +1,9 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
+import { Field, FieldDescription } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 
 /**
  * Guarda o avatar desta rodada no acervo, pra reusar em outras.
@@ -25,35 +28,41 @@ export function SalvarAvatar({
   const [pending, start] = useTransition();
 
   if (salvo) {
-    return <p className="text-[11px] text-emerald-400/80">avatar salvo no acervo</p>;
+    return <p className="text-[11px] text-success">avatar salvo no acervo</p>;
   }
 
   if (!aberto) {
     return (
-      <button
+      <Button
+        type="button"
+        variant="link"
+        size="xs"
+        className="self-start text-muted-foreground"
         onClick={() => setAberto(true)}
-        className="text-[11px] text-neutral-500 underline hover:text-neutral-300"
       >
         salvar este avatar para reusar
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className="space-y-1.5">
-      <input
+    <Field>
+      <Input
         value={nome}
         onChange={(e) => setNome(e.target.value)}
         placeholder="como você vai chamar esse personagem"
-        className="w-full rounded border border-neutral-800 bg-transparent px-2 py-1.5 text-xs"
+        className="text-xs"
       />
-      <p className="text-[11px] text-neutral-600">
+      <FieldDescription className="text-[11px]">
         Salva a imagem e a nota de casting. Nas próximas rodadas dá para escolher este
         avatar e a esteira pula a geração do rosto.
-      </p>
-      {erro && <p className="text-[11px] text-red-400">{erro}</p>}
+      </FieldDescription>
+      {erro && <p className="text-[11px] text-destructive">{erro}</p>}
       <div className="flex gap-2">
-        <button
+        <Button
+          type="button"
+          size="xs"
+          variant="secondary"
           disabled={pending || !nome.trim()}
           onClick={() =>
             start(async () => {
@@ -65,17 +74,13 @@ export function SalvarAvatar({
               }
             })
           }
-          className="rounded bg-neutral-100 px-3 py-1.5 text-[11px] font-medium text-neutral-950 disabled:opacity-40"
         >
           {pending ? "salvando…" : "Salvar no acervo"}
-        </button>
-        <button
-          onClick={() => setAberto(false)}
-          className="rounded border border-neutral-800 px-3 py-1.5 text-[11px]"
-        >
+        </Button>
+        <Button type="button" size="xs" variant="outline" onClick={() => setAberto(false)}>
           cancelar
-        </button>
+        </Button>
       </div>
-    </div>
+    </Field>
   );
 }

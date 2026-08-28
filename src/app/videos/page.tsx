@@ -2,6 +2,10 @@ import { desc } from "drizzle-orm";
 import { db } from "@/db";
 import { videos } from "@/db/schema";
 import { requireDashboardAuth } from "@/lib/auth";
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 export const dynamic = "force-dynamic";
 
@@ -25,64 +29,76 @@ export default async function Videos() {
   const total = acervo.reduce((s, v) => s + v.custoCents, 0);
 
   return (
-    <main className="mx-auto max-w-6xl p-6 space-y-6">
-      <header className="flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-lg font-semibold">Vídeos produzidos</h1>
-          <p className="mt-0.5 text-xs text-neutral-500">
+    <PageShell largura="lg">
+      <PageHeader className="flex-row items-end justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <PageTitle className="text-lg">Vídeos produzidos</PageTitle>
+          <PageDescription className="text-xs">
             {acervo.length === 0
               ? "Nada por aqui ainda."
               : `${acervo.length} vídeo(s) · ${dinheiro(total)} gastos no total`}
-          </p>
+          </PageDescription>
         </div>
-        <a href="/produzir" className="text-xs text-neutral-400 underline hover:text-neutral-200">
+        <Button variant="link" size="sm" render={<a href="/produzir" />} nativeButton={false}>
           ir para a esteira
-        </a>
-      </header>
+        </Button>
+      </PageHeader>
 
       {acervo.length === 0 ? (
-        <p className="rounded-lg border border-neutral-900 p-8 text-center text-sm text-neutral-500">
-          Os vídeos aparecem aqui assim que uma rodada chega no passo <code>compor</code>.
-          <br />
-          Eles ficam mesmo que a rodada seja apagada da fila.
-        </p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>Nenhum vídeo produzido</EmptyTitle>
+            <EmptyDescription>
+              Os vídeos aparecem aqui assim que uma rodada chega no passo <code>compor</code>. Eles
+              ficam mesmo que a rodada seja apagada da fila.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {acervo.map((v) => (
-            <figure key={v.id} className="rounded-lg border border-neutral-900 p-3">
-              {/* `preload="none"` de propósito: são dezenas de MB cada, e uma
-                  galeria que baixa tudo de uma vez trava o navegador. */}
-              <video
-                src={v.url}
-                poster={v.previewUrl ?? undefined}
-                controls
-                preload="none"
-                className="w-full rounded border border-neutral-800 bg-black"
-              />
-              <figcaption className="mt-2 space-y-1">
-                <p className="truncate text-sm font-medium" title={v.nome}>{v.nome}</p>
-                <p className="text-[11px] text-neutral-500">
+            <Card key={v.id} className="gap-3 p-3">
+              <CardContent className="px-0">
+                {/* `preload="none"` de propósito: são dezenas de MB cada, e uma
+                    galeria que baixa tudo de uma vez trava o navegador. */}
+                <video
+                  src={v.url}
+                  poster={v.previewUrl ?? undefined}
+                  controls
+                  preload="none"
+                  className="w-full rounded-md border bg-black"
+                />
+              </CardContent>
+              <CardFooter className="flex-col items-start gap-1 px-0">
+                <p className="w-full truncate text-sm font-medium" title={v.nome}>
+                  {v.nome}
+                </p>
+                <p className="text-[11px] text-muted-foreground">
                   {quando(v.criadoEm)}
                   {v.modelo && ` · ${v.modelo}`}
                   {v.custoCents > 0 && ` · ${dinheiro(v.custoCents)}`}
                 </p>
-                <div className="flex gap-3 pt-0.5 text-[11px]">
-                  <a href={v.url} target="_blank" rel="noreferrer"
-                     className="text-neutral-400 underline hover:text-neutral-200">
+                <div className="flex gap-2 pt-0.5">
+                  <Button variant="link" size="xs" render={<a href={v.url} target="_blank" rel="noreferrer" />} nativeButton={false}>
                     abrir
-                  </a>
+                  </Button>
                   {v.refVideoUrl && (
-                    <a href={v.refVideoUrl} target="_blank" rel="noreferrer"
-                       className="text-neutral-600 underline hover:text-neutral-400">
+                    <Button
+                      variant="link"
+                      size="xs"
+                      className="text-muted-foreground"
+                      render={<a href={v.refVideoUrl} target="_blank" rel="noreferrer" />}
+                      nativeButton={false}
+                    >
                       ver a referência
-                    </a>
+                    </Button>
                   )}
                 </div>
-              </figcaption>
-            </figure>
+              </CardFooter>
+            </Card>
           ))}
         </div>
       )}
-    </main>
+    </PageShell>
   );
 }

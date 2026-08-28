@@ -1,10 +1,14 @@
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
+
 export const metadata = { title: "Política de Privacidade — Social Hub" };
 
 export default function Privacy() {
   return (
-    <main className="mx-auto max-w-2xl px-6 py-16 prose-invert">
-      <h1 className="text-2xl font-semibold mb-2">Política de Privacidade</h1>
-      <p className="text-sm text-neutral-500 mb-8">Atualizada em 25 de agosto de 2026</p>
+    <PageShell largura="sm" className="max-w-2xl gap-8 py-16">
+      <PageHeader>
+        <PageTitle>Política de Privacidade</PageTitle>
+        <PageDescription>Atualizada em 25 de agosto de 2026</PageDescription>
+      </PageHeader>
 
       <Section title="O que é o Social Hub">
         O Social Hub é uma ferramenta interna, de uso pessoal, operada por Gustavo
@@ -14,7 +18,7 @@ export default function Privacy() {
       </Section>
 
       <Section title="Dados que coletamos">
-        <ul className="list-disc pl-5 space-y-1">
+        <ul className="flex list-disc flex-col gap-1 pl-5">
           <li>Dados das contas conectadas: identificador, nome de usuário e foto de perfil.</li>
           <li>Tokens de acesso fornecidos pelas plataformas, armazenados cifrados (AES-256-GCM).</li>
           <li>
@@ -49,15 +53,15 @@ export default function Privacy() {
       <Section title="Contato">
         Dúvidas ou solicitações: <strong>coven688@gmail.com</strong>
       </Section>
-    </main>
+    </PageShell>
   );
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <section className="mb-8">
-      <h2 className="text-base font-semibold mb-2">{title}</h2>
-      <div className="text-sm text-neutral-300 leading-relaxed">{children}</div>
+    <section className="flex flex-col gap-2">
+      <h2 className="text-base font-semibold">{title}</h2>
+      <div className="text-sm leading-relaxed">{children}</div>
     </section>
   );
 }

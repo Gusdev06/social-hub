@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { socialAccounts } from "@/db/schema";
 import { listMedia, type IgMedia } from "@/lib/instagram";
 import { Wizard } from "../wizard";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 export const dynamic = "force-dynamic";
 
@@ -14,7 +15,13 @@ export default async function NovaAutomacao() {
 
   const conta = contas[0];
   if (!conta) {
-    return <p className="text-sm text-neutral-500">Conecte uma conta do Instagram primeiro.</p>;
+    return (
+      <Empty>
+        <EmptyHeader>
+          <EmptyTitle>Conecte uma conta do Instagram primeiro</EmptyTitle>
+        </EmptyHeader>
+      </Empty>
+    );
   }
 
   let media: IgMedia[] = [];

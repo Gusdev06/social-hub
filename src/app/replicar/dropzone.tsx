@@ -1,8 +1,14 @@
 "use client";
 
+import { XIcon } from "lucide-react";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { signUploadAction } from "../compose/actions";
 import { importarUrlsAction } from "./actions";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { cn } from "@/lib/utils";
 
 /**
  * Aceita quatro entradas, porque cada uma resolve um atrito diferente:
@@ -10,6 +16,10 @@ import { importarUrlsAction } from "./actions";
  *  · Cmd+V de um print                                    → vem como File
  *  · arrastar arquivo do Finder                           → vem como File
  *  · colar URLs de imagem na caixa                        → texto
+ *
+ * A área de drop é feita à mão de propósito: o shadcn não tem primitivo de
+ * upload, e o que importa aqui — dragover, `text/uri-list`, paste global — não
+ * cabe num Input comum.
  */
 export function DropZone({
   imagens, onImagens,
@@ -77,7 +87,7 @@ export function DropZone({
   });
 
   return (
-    <div className="space-y-3">
+    <div className="flex flex-col gap-3">
       <div
         ref={areaRef}
         onDragOver={(e) => { e.preventDefault(); setSobre(true); }}
@@ -93,15 +103,15 @@ export function DropZone({
           if (urls.length) importar(urls);
         }}
         onClick={() => inputRef.current?.click()}
-        className={`cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition ${
-          sobre ? "border-blue-500 bg-blue-500/5" : "border-neutral-800 hover:border-neutral-700"
-        }`}
+        className={cn(
+          "cursor-pointer rounded-xl border-2 border-dashed p-8 text-center transition-colors",
+          sobre ? "border-primary bg-primary/5" : "hover:border-ring",
+        )}
       >
-        <p className="text-sm font-medium">
-          Arraste as imagens do post aqui
-        </p>
-        <p className="mt-1 text-xs text-neutral-600">
-          Abra o post noutra aba e arraste cada imagem · ou <kbd className="rounded bg-neutral-800 px-1">⌘V</kbd> um print · ou clique pra escolher arquivos
+        <p className="text-sm font-medium">Arraste as imagens do post aqui</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Abra o post noutra aba e arraste cada imagem · ou{" "}
+          <kbd className="rounded bg-muted px-1">⌘V</kbd> um print · ou clique pra escolher arquivos
         </p>
       </div>
 
@@ -110,45 +120,56 @@ export function DropZone({
         onChange={(e) => subirArquivos(Array.from(e.target.files ?? []))}
       />
 
-      <details className="rounded-lg border border-neutral-800 p-3">
-        <summary className="cursor-pointer text-xs text-neutral-500">
-          Ou cole as URLs das imagens (uma por linha)
-        </summary>
-        <textarea
-          value={colarUrls}
-          onChange={(e) => setColarUrls(e.target.value)}
-          rows={3}
-          placeholder="https://scontent.cdninstagram.com/..."
-          className="mt-2 w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-xs font-mono"
-        />
-        <button
-          type="button"
-          disabled={pending}
-          onClick={() => importar(colarUrls.split("\n").map((s) => s.trim()).filter(Boolean))}
-          className="mt-2 rounded-lg border border-neutral-700 px-3 py-1.5 text-xs disabled:opacity-40"
-        >
-          Baixar essas URLs
-        </button>
-        <p className="mt-2 text-xs text-neutral-600">
-          No post: botão direito na imagem → &ldquo;Copiar endereço da imagem&rdquo;.
-        </p>
-      </details>
+      <Accordion className="rounded-lg border px-3">
+        <AccordionItem value="urls">
+          <AccordionTrigger className="text-xs text-muted-foreground">
+            Ou cole as URLs das imagens (uma por linha)
+          </AccordionTrigger>
+          <AccordionContent className="flex flex-col gap-2">
+            <Textarea
+              value={colarUrls}
+              onChange={(e) => setColarUrls(e.target.value)}
+              rows={3}
+              placeholder="https://scontent.cdninstagram.com/..."
+              className="font-mono text-xs"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="self-start"
+              disabled={pending}
+              onClick={() => importar(colarUrls.split("\n").map((s) => s.trim()).filter(Boolean))}
+            >
+              Baixar essas URLs
+            </Button>
+            <p className="text-xs text-muted-foreground">
+              No post: botão direito na imagem → &ldquo;Copiar endereço da imagem&rdquo;.
+            </p>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
-      {status && <p className="text-xs text-amber-400">{status}</p>}
+      {status && <p className="text-xs text-warning">{status}</p>}
 
       {imagens.length > 0 && (
         <div className="flex flex-wrap gap-2">
           {imagens.map((u, i) => (
             <div key={i} className="relative">
-              <img src={u} alt="" className="size-20 rounded object-cover border border-neutral-800" />
-              <button
+              <img src={u} alt="" className="size-20 rounded-md border object-cover" />
+              <Button
                 type="button"
+                variant="secondary"
+                size="icon-xs"
+                aria-label={`Remover imagem ${i + 1}`}
+                className="absolute -top-1 -right-1 rounded-full"
                 onClick={() => onImagens(imagens.filter((_, j) => j !== i))}
-                className="absolute -right-1 -top-1 size-5 rounded-full bg-neutral-800 text-xs text-neutral-300 hover:bg-red-900"
-              >×</button>
-              <span className="absolute bottom-0 left-0 rounded-tr bg-black/70 px-1 text-[10px] text-neutral-300">
+              >
+                <XIcon />
+              </Button>
+              <Badge variant="secondary" className="absolute bottom-0.5 left-0.5">
                 {i + 1}
-              </span>
+              </Badge>
             </div>
           ))}
         </div>

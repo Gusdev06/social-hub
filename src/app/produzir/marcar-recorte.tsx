@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useTransition } from "react";
+import { Button } from "@/components/ui/button";
 
 type Ret = { x0: number; y0: number; x1: number; y1: number };
 
@@ -60,20 +61,21 @@ export function MarcarRecorte({
 
   if (!aberto) {
     return (
-      <button
+      <Button
+        type="button"
+        variant="link"
+        size="xs"
+        className={atual ? "self-start text-success" : "self-start text-muted-foreground"}
         onClick={() => setAberto(true)}
-        className={`text-[11px] underline ${
-          atual ? "text-emerald-400/80 hover:text-emerald-300" : "text-neutral-600 hover:text-neutral-400"
-        }`}
       >
         {atual ? "recorte marcado à mão — editar" : "marcar recorte do original"}
-      </button>
+      </Button>
     );
   }
 
   return (
-    <div className="mt-1 space-y-2 rounded border border-neutral-800 p-2.5">
-      <p className="text-[11px] text-neutral-400">
+    <div className="mt-1 flex flex-col gap-2 rounded-md border p-2.5">
+      <p className="text-[11px] text-muted-foreground">
         Arraste em volta do que vem do original neste trecho — o cartão do app, a barra,
         o que for. O resto do quadro vira o avatar.
       </p>
@@ -87,44 +89,50 @@ export function MarcarRecorte({
         className="relative w-fit cursor-crosshair select-none"
       >
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={frameUrl} alt="frame do original" draggable={false} className="h-72 rounded" />
+        <img src={frameUrl} alt="frame do original" draggable={false} className="h-72 rounded-md" />
         {ret && (
           <div
             style={estilo(ret)}
-            className="pointer-events-none absolute border-2 border-emerald-400 bg-emerald-400/10"
+            className="pointer-events-none absolute border-2 border-success bg-success/10"
           />
         )}
       </div>
 
       {ret && (
-        <p className="font-mono text-[10px] text-neutral-500">
+        <p className="font-mono text-[10px] text-muted-foreground">
           x {ret.x0}–{ret.x1} · y {ret.y0}–{ret.y1} (em pixels da referência {largura}×{altura})
         </p>
       )}
 
       <div className="flex gap-2">
-        <button
+        <Button
+          type="button"
+          size="xs"
+          variant="secondary"
           disabled={pending || !ret}
           onClick={() => start(async () => { await acao(id, trecho, ret); setAberto(false); })}
-          className="rounded bg-neutral-100 px-3 py-1.5 text-[11px] font-medium text-neutral-950 disabled:opacity-40"
         >
           {pending ? "salvando…" : "Usar este recorte"}
-        </button>
+        </Button>
         {atual && (
-          <button
+          <Button
+            type="button"
+            size="xs"
+            variant="outline"
             disabled={pending}
             onClick={() => start(async () => { await acao(id, trecho, null); setAberto(false); })}
-            className="rounded border border-neutral-800 px-3 py-1.5 text-[11px] text-neutral-400"
           >
             voltar ao automático
-          </button>
+          </Button>
         )}
-        <button
+        <Button
+          type="button"
+          size="xs"
+          variant="outline"
           onClick={() => { setRet(atual ?? null); setAberto(false); }}
-          className="rounded border border-neutral-800 px-3 py-1.5 text-[11px]"
         >
           cancelar
-        </button>
+        </Button>
       </div>
     </div>
   );

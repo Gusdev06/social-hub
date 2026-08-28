@@ -3,6 +3,9 @@ import { JobCard } from "./job-card";
 import { listarAvatares, listarJobs } from "./actions";
 import { NovaRodada } from "./nova-rodada";
 import { WorkerStatus } from "./worker-status";
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 export const dynamic = "force-dynamic";
 
@@ -11,17 +14,19 @@ export default async function Produzir() {
   const rodando = jobs.some((j) => ["pending", "running"].includes(j.status));
 
   return (
-    <main className="mx-auto max-w-5xl px-6 py-12 space-y-8">
-      <header>
-        <h1 className="text-xl font-semibold">Produzir vídeo</h1>
-        <a href="/videos" className="ml-3 align-middle text-xs font-normal text-neutral-400 underline hover:text-neutral-200">
-          ver os vídeos produzidos
-        </a>
-        <p className="mt-1 text-sm text-neutral-500">
+    <PageShell>
+      <PageHeader>
+        <div className="flex items-baseline gap-3">
+          <PageTitle className="text-xl">Produzir vídeo</PageTitle>
+          <Button variant="link" size="sm" render={<a href="/videos" />} nativeButton={false}>
+            ver os vídeos produzidos
+          </Button>
+        </div>
+        <PageDescription>
           Clona um criativo que já escalou trocando só o avatar. A estrutura de edição é medida
           do arquivo — faixas em pixel, cortes em segundo — não estimada no olho.
-        </p>
-      </header>
+        </PageDescription>
+      </PageHeader>
 
       <WorkerStatus temFila={rodando} />
 
@@ -29,13 +34,17 @@ export default async function Produzir() {
 
       <AutoRefresh ativo={rodando} />
 
-      <section className="space-y-4">
+      <section className="flex flex-col gap-4">
         {jobs.length === 0 ? (
-          <p className="text-sm text-neutral-500">Nenhuma rodada ainda.</p>
+          <Empty>
+            <EmptyHeader>
+              <EmptyTitle>Nenhuma rodada ainda</EmptyTitle>
+            </EmptyHeader>
+          </Empty>
         ) : (
           jobs.map((j) => <JobCard key={j.id} job={j} />)
         )}
       </section>
-    </main>
+    </PageShell>
   );
 }

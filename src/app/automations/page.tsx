@@ -3,8 +3,25 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/db";
 import { automations, socialAccounts } from "@/db/schema";
 import { AutomationRows } from "./rows";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const dynamic = "force-dynamic";
+
+const ESTADOS = [
+  { label: "Estados variados do gatilho", value: null },
+  { label: "Somente LIVE", value: "live" },
+  { label: "Somente pausadas", value: "pausada" },
+];
 
 export default async function Automations({
   searchParams,
@@ -38,50 +55,58 @@ export default async function Automations({
   });
 
   return (
-    <main className="space-y-6">
+    <main className="flex flex-col gap-6">
       <div className="flex items-start justify-between gap-4">
         <h2 className="text-2xl font-semibold">Minhas automações</h2>
-        <Link
-          href="/automations/new"
-          className="shrink-0 rounded-lg bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500"
-        >
+        <Button size="lg" className="shrink-0" render={<Link href="/automations/new" />} nativeButton={false}>
           + Nova Automação
-        </Link>
+        </Button>
       </div>
 
-      <form className="flex flex-wrap gap-3">
-        <input
+      <form className="flex flex-wrap items-center gap-3">
+        <Input
           name="q"
           defaultValue={sp.q ?? ""}
           placeholder="Pesquisar todas as automações"
-          className="w-64 rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm"
+          className="w-64"
         />
-        <select
-          name="estado"
-          defaultValue={sp.estado ?? ""}
-          className="rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm"
-        >
-          <option value="">Estados variados do gatilho</option>
-          <option value="live">Somente LIVE</option>
-          <option value="pausada">Somente pausadas</option>
-        </select>
-        <button className="rounded-lg border border-neutral-800 px-3 py-2 text-sm text-neutral-300 hover:border-neutral-600">
+        <Select items={ESTADOS} name="estado" defaultValue={sp.estado ?? null}>
+          <SelectTrigger className="w-56">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {ESTADOS.map((e) => (
+                <SelectItem key={e.label} value={e.value}>
+                  {e.label}
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        <Button type="submit" variant="outline">
           Filtrar
-        </button>
+        </Button>
       </form>
 
       {filtradas.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-neutral-800 py-16 text-center">
-          <p className="text-sm text-neutral-500">Nenhuma automação ainda.</p>
-          <Link href="/automations/new" className="mt-2 inline-block text-sm text-blue-400 hover:underline">
-            Criar a primeira
-          </Link>
-        </div>
+        <Empty className="border border-dashed">
+          <EmptyHeader>
+            <EmptyTitle>Nenhuma automação ainda</EmptyTitle>
+          </EmptyHeader>
+          <EmptyContent>
+            <Button variant="link" render={<Link href="/automations/new" />} nativeButton={false}>
+              Criar a primeira
+            </Button>
+          </EmptyContent>
+        </Empty>
       ) : (
-        <AutomationRows linhas={filtradas.map((a) => ({
-          ...a,
-          createdAt: a.createdAt.toISOString(),
-        }))} />
+        <AutomationRows
+          linhas={filtradas.map((a) => ({
+            ...a,
+            createdAt: a.createdAt.toISOString(),
+          }))}
+        />
       )}
     </main>
   );

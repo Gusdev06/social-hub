@@ -12,6 +12,22 @@ import type {
   AccentId, FontId, FormatId, PurposeId, SlideData, SurfaceId,
 } from "@/lib/carousel/types";
 import type { Carrossel, PostGerado } from "@/lib/claude";
+import { SectionLabel } from "@/components/section-label";
+import { Button } from "@/components/ui/button";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
+import { cn } from "@/lib/utils";
 
 const TIPOS: SlideData["type"][] = [
   "hook", "body", "list", "checklist", "process", "stats",
@@ -87,8 +103,8 @@ export function CarrosselEditor({
   };
 
   return (
-    <div className="space-y-5">
-      <h2 className="text-sm font-semibold uppercase tracking-wide text-neutral-500">4 · Artes</h2>
+    <div className="flex flex-col gap-5">
+      <SectionLabel>4 · Artes</SectionLabel>
 
       {/* eixos de estilo */}
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -103,100 +119,163 @@ export function CarrosselEditor({
           opcoes={Object.values(FORMAT_PRESETS).map((f) => [f.id, f.name])} />
       </div>
 
-      <div className="flex gap-2">
-        {(["carousel", "presentation"] as PurposeId[]).map((p) => (
-          <button key={p} onClick={() => setProposito(p)}
-            className={`rounded-lg border px-3 py-1.5 text-xs ${
-              p === proposito ? "border-neutral-500 text-neutral-100" : "border-neutral-800 text-neutral-500"
-            }`}>{p === "carousel" ? "Carrossel (caixa alta, denso)" : "Apresentação (maior, sentence case)"}</button>
-        ))}
-      </div>
+      <ToggleGroup
+        value={[proposito]}
+        onValueChange={(v) => {
+          const p = (v as string[])[0];
+          if (p) setProposito(p as PurposeId);
+        }}
+        className="self-start"
+      >
+        <ToggleGroupItem value="carousel">Carrossel (caixa alta, denso)</ToggleGroupItem>
+        <ToggleGroupItem value="presentation">Apresentação (maior, sentence case)</ToggleGroupItem>
+      </ToggleGroup>
 
       <div className="flex flex-wrap gap-6">
         {/* preview escalado do MESMO nó que é exportado */}
-        <div className="shrink-0 space-y-3">
-          <div style={{ width: 300, height: fmt.h * escala }} className="overflow-hidden rounded-xl border border-neutral-800">
+        <div className="flex shrink-0 flex-col gap-3">
+          <div style={{ width: 300, height: fmt.h * escala }} className="overflow-hidden rounded-xl border">
             <div ref={exportRef} style={{ transform: `scale(${escala})`, transformOrigin: "top left" }}>
               {s && <SlideRender slide={s} preset={preset} indice={ativo} total={slides.length}
                 handle={handle} largura={fmt.w} altura={fmt.h} />}
             </div>
           </div>
-          <div className="flex w-[300px] flex-wrap gap-1">
+          <ToggleGroup
+            value={[String(ativo)]}
+            onValueChange={(v) => {
+              const i = (v as string[])[0];
+              if (i != null) setAtivo(Number(i));
+            }}
+            className="w-[300px] flex-wrap"
+          >
             {slides.map((_, i) => (
-              <button key={i} onClick={() => setAtivo(i)}
-                className={`size-8 rounded text-xs ${
-                  i === ativo ? "bg-neutral-100 text-neutral-900" : "bg-neutral-800 text-neutral-400"
-                }`}>{i + 1}</button>
+              <ToggleGroupItem key={i} value={String(i)} aria-label={`Slide ${i + 1}`}>
+                {i + 1}
+              </ToggleGroupItem>
             ))}
-          </div>
+          </ToggleGroup>
         </div>
 
         {/* editor do slide */}
-        <div className="flex-1 min-w-[320px] space-y-3">
-          <select value={s?.type} onChange={(e) => editar("type", e.target.value)}
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm">
-            {TIPOS.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
+        <div className="flex min-w-[320px] flex-1 flex-col gap-3">
+          <Select
+            items={TIPOS.map((t) => ({ label: t, value: t }))}
+            value={s?.type}
+            onValueChange={(v) => editar("type", v)}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectGroup>
+                {TIPOS.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </SelectGroup>
+            </SelectContent>
+          </Select>
 
-          <input value={s?.badge ?? ""} onChange={(e) => editar("badge", e.target.value)}
+          <Input
+            value={s?.badge ?? ""}
+            onChange={(e) => editar("badge", e.target.value)}
             placeholder="Etiqueta (opcional)"
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm" />
-          <textarea value={s?.title ?? ""} onChange={(e) => editar("title", e.target.value)} rows={2}
+          />
+          <Textarea
+            value={s?.title ?? ""}
+            onChange={(e) => editar("title", e.target.value)}
+            rows={2}
             placeholder="Título"
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm font-medium" />
-          <textarea value={s?.text ?? ""} onChange={(e) => editar("text", e.target.value)} rows={3}
+            className="font-medium"
+          />
+          <Textarea
+            value={s?.text ?? ""}
+            onChange={(e) => editar("text", e.target.value)}
+            rows={3}
             placeholder="Texto"
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm" />
-          <input value={s?.highlight ?? ""} onChange={(e) => editar("highlight", e.target.value)}
+          />
+          <Input
+            value={s?.highlight ?? ""}
+            onChange={(e) => editar("highlight", e.target.value)}
             placeholder="Expressão em destaque (sai na cor de acento)"
-            className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm" />
+          />
 
           {["list", "checklist", "process"].includes(s?.type ?? "") && (
-            <textarea value={(s?.items ?? []).join("\n")}
+            <Textarea
+              value={(s?.items ?? []).join("\n")}
               onChange={(e) => editar("items", e.target.value.split("\n"))}
-              rows={4} placeholder="Um item por linha"
-              className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm" />
+              rows={4}
+              placeholder="Um item por linha"
+            />
           )}
           {s?.type === "number" && (
-            <input value={s?.bigNumber ?? ""} onChange={(e) => editar("bigNumber", e.target.value)}
+            <Input
+              value={s?.bigNumber ?? ""}
+              onChange={(e) => editar("bigNumber", e.target.value)}
               placeholder="17 · 5K+ · №1"
-              className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm" />
+            />
           )}
 
-          <div className="flex gap-3 text-xs">
-            <button onClick={() => setSlides((a) => [...a, { type: "body", title: "", text: "" }])}
-              className="text-neutral-500 hover:text-neutral-200">+ slide</button>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              size="xs"
+              className="text-muted-foreground"
+              onClick={() => setSlides((a) => [...a, { type: "body", title: "", text: "" }])}
+            >
+              + slide
+            </Button>
             {slides.length > 1 && (
-              <button onClick={() => { setSlides((a) => a.filter((_, j) => j !== ativo)); setAtivo((a) => Math.max(0, a - 1)); }}
-                className="text-neutral-500 hover:text-red-400">remover slide</button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="xs"
+                className="text-muted-foreground"
+                onClick={() => {
+                  setSlides((a) => a.filter((_, j) => j !== ativo));
+                  setAtivo((a) => Math.max(0, a - 1));
+                }}
+              >
+                remover slide
+              </Button>
             )}
           </div>
         </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <button onClick={exportar}
-          className="rounded-lg bg-neutral-100 px-4 py-2 text-sm font-medium text-neutral-900">
+        <Button type="button" size="lg" variant="secondary" onClick={exportar}>
           Gerar as {slides.length} artes
-        </button>
+        </Button>
         {urls.length > 0 && (
-          <button onClick={() => startSalvar(async () => {
-            const r = await salvarRascunho(postParaRascunho, urls);
-            setStatus(r.message);
-          })} disabled={salvando}
-            className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">
+          <Button
+            type="button"
+            size="lg"
+            disabled={salvando}
+            onClick={() => startSalvar(async () => {
+              const r = await salvarRascunho(postParaRascunho, urls);
+              setStatus(r.message);
+            })}
+          >
             {salvando ? "Salvando…" : "Mandar pro Novo post"}
-          </button>
+          </Button>
         )}
         {status && (
-          <p className={`text-sm ${status.startsWith("Erro") ? "text-red-400" : "text-emerald-400"}`}>{status}</p>
+          <p className={cn("text-sm", status.startsWith("Erro") ? "text-destructive" : "text-success")}>
+            {status}
+          </p>
         )}
       </div>
 
       {urls.length > 0 && (
-        <div className="flex gap-2 overflow-x-auto pb-2">
-          {urls.map((u, i) => <img key={i} src={u} alt="" className="h-40 rounded border border-neutral-800" />)}
-        </div>
+        <ScrollArea className="w-full">
+          <div className="flex gap-2 pb-2">
+            {urls.map((u, i) => <img key={i} src={u} alt="" className="h-40 rounded-md border" />)}
+          </div>
+          <ScrollBar orientation="horizontal" />
+        </ScrollArea>
       )}
     </div>
   );
@@ -208,22 +287,43 @@ function Eixo({
   label: string; valor: string; onChange: (v: string) => void;
   opcoes: [string, string][]; cores?: Record<string, string>;
 }) {
+  const items = opcoes.map(([value, label]) => ({ label, value }));
   return (
-    <div>
-      <p className="mb-1 text-xs text-neutral-500">{label}</p>
-      <select value={valor} onChange={(e) => onChange(e.target.value)}
-        className="w-full rounded-lg border border-neutral-800 bg-neutral-950 px-3 py-2 text-sm">
-        {opcoes.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
-      </select>
+    <Field>
+      <FieldLabel className="text-xs text-muted-foreground">{label}</FieldLabel>
+      <Select items={items} value={valor} onValueChange={(v) => onChange(v as string)}>
+        <SelectTrigger className="w-full">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectGroup>
+            {items.map((o) => (
+              <SelectItem key={o.value} value={o.value}>
+                {o.label}
+              </SelectItem>
+            ))}
+          </SelectGroup>
+        </SelectContent>
+      </Select>
       {cores && (
-        <div className="mt-2 flex flex-wrap gap-1.5">
+        <div className="mt-1 flex flex-wrap gap-1.5">
+          {/* As cores são as do preset da arte, literais de propósito — não são
+              tokens do painel. */}
           {opcoes.map(([v]) => (
-            <button key={v} onClick={() => onChange(v)} title={v}
+            <button
+              key={v}
+              type="button"
+              onClick={() => onChange(v)}
+              title={v}
               style={{ backgroundColor: cores[v] }}
-              className={`size-5 rounded-full ${valor === v ? "ring-2 ring-neutral-100 ring-offset-2 ring-offset-neutral-950" : ""}`} />
+              className={cn(
+                "size-5 rounded-full",
+                valor === v && "ring-2 ring-ring ring-offset-2 ring-offset-background",
+              )}
+            />
           ))}
         </div>
       )}
-    </div>
+    </Field>
   );
 }

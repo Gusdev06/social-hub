@@ -3,6 +3,8 @@ import { db } from "@/db";
 import { socialAccounts } from "@/db/schema";
 import { storageConfigured } from "@/lib/storage";
 import { ComposeForm } from "./form";
+import { PageDescription, PageHeader, PageShell, PageTitle } from "@/components/page-shell";
+import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 export const dynamic = "force-dynamic";
 
@@ -18,19 +20,24 @@ export default async function Compose() {
     .where(eq(socialAccounts.isActive, true));
 
   return (
-    <main className="mx-auto max-w-xl px-6 py-12 space-y-8">
-      <header>
-        <h1 className="text-xl font-semibold">Novo post</h1>
-        <p className="text-sm text-neutral-500 mt-1">
+    <PageShell largura="sm">
+      <PageHeader>
+        <PageTitle className="text-xl">Novo post</PageTitle>
+        <PageDescription>
           Publica ou agenda o mesmo conteúdo em vários perfis de uma vez.
-        </p>
-      </header>
+        </PageDescription>
+      </PageHeader>
 
       {accounts.length === 0 ? (
-        <p className="text-sm text-neutral-600">Nenhuma conta ativa conectada.</p>
+        <Empty>
+          <EmptyHeader>
+            <EmptyTitle>Nenhuma conta ativa conectada</EmptyTitle>
+            <EmptyDescription>Conecte um perfil antes de publicar.</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       ) : (
         <ComposeForm accounts={accounts} uploadEnabled={storageConfigured()} />
       )}
-    </main>
+    </PageShell>
   );
 }
