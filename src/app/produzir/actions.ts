@@ -352,6 +352,60 @@ export async function salvarPromptManualAction(id: string, n: number, prompt: st
 }
 
 /**
+ * Descarta a proposta da LLM pro clipe `n` e devolve a rodada pra fila, que
+ * escreve outra e para no MESMO portão.
+ *
+ * Quem reescreve é o worker, não esta action. A `WAVESPEED_API_KEY` é a mesma
+ * chave da geração de vídeo, e ela não existe na Vercel — colocá-la aqui só pra
+ * economizar os ~5s do próximo tick seria pôr a chave que gasta crédito de vídeo
+ * no app que responde na web aberta.
+ *
+ * Só vale pro próximo clipe da fila, que é exatamente o do portão: a esteira
+ * procura o primeiro clipe SEM vídeo, então apagar o prompt de um clipe já
+ * gerado não a faria voltar nele — deixaria o clipe sem registro de como nasceu.
+ *
+ * A proposta anterior SOME. Se ela servia, é mais barato editar à mão do que
+ * apostar num sorteio novo.
+ */
+export async function regerarPromptAction(id: string, n: number): Promise<void> {
+  await requireDashboardAuth();
+
+  const [job] = await db.select().from(renderJobs).where(eq(renderJobs.id, id));
+  if (!job) throw new Error("rodada não encontrada");
+
+  const proximo = job.manifest.roteiro
+    ?.find((r) => !job.manifest.clipes?.some((c) => c.n === r.n && c.url))?.n;
+  if (proximo == null) throw new Error("todos os clipes já foram gerados nesta rodada");
+  if (proximo !== n) {
+    throw new Error(
+      `o clipe ${n} não é o próximo da fila — a esteira está no clipe ${proximo}, ` +
+      `e reescrever o prompt de um clipe já gerado não o gera de novo. ` +
+      `Pra outra versão dele, use "outro take".`,
+    );
+  }
+
+  const aplicado = await db
+    .update(renderJobs)
+    .set({
+      manifest: {
+        ...job.manifest,
+        prompts: (job.manifest.prompts ?? []).filter((p) => p.n !== n),
+      },
+      // Sem prompt pro próximo clipe, o passo `clipes` escreve um e para de novo
+      // — é o mesmo caminho da primeira proposta, não um segundo caminho.
+      step: "clipes",
+      status: "pending",
+      lastError: null,
+      updatedAt: new Date(),
+    })
+    .where(paradaLivre(id))
+    .returning({ id: renderJobs.id });
+  exigirAplicado(aplicado);
+
+  revalidatePath("/produzir");
+}
+
+/**
  * Salva o avatar da rodada pra reusar em outras.
  *
  * Guarda a imagem E a nota de casting. A nota reaparece literalmente em todo

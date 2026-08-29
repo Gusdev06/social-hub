@@ -19,9 +19,16 @@ import { cn } from "@/lib/utils";
  *
  * Salvar não gera nada de propósito. Conferir é preparação; quem dispara crédito
  * de vídeo é o "Confirmei — seguir".
+ *
+ * Três saídas no portão, e nenhuma delas gasta crédito de vídeo: aceitar como
+ * está, corrigir à mão, ou pedir outra proposta à LLM.
+ *
+ * O texto do textarea é estado local semeado pela prop. Quem monta este
+ * componente precisa remontá-lo (`key`) quando o prompt do servidor mudar, ou
+ * uma proposta nova chega e a tela continua mostrando a velha.
  */
 export function PromptManual({
-  id, n, prompt, origem, enviado, portao, acao,
+  id, n, prompt, origem, enviado, portao, acao, regerar,
 }: {
   id: string;
   n: number;
@@ -32,10 +39,17 @@ export function PromptManual({
   /** A esteira parou esperando a conferência DESTE clipe. */
   portao?: boolean;
   acao: (id: string, n: number, prompt: string) => Promise<void>;
+  /**
+   * Joga fora esta proposta e devolve a rodada pra fila, que escreve outra.
+   * Só chega preenchido no portão: fora dele, o clipe seguinte já é outro e a
+   * esteira não voltaria neste.
+   */
+  regerar?: (id: string, n: number) => Promise<void>;
 }) {
   const [v, setV] = useState(prompt);
   const [aberto, setAberto] = useState(false);
   const [pending, start] = useTransition();
+  const [erro, setErro] = useState("");
 
   if (!aberto && !portao) {
     return (
@@ -115,25 +129,70 @@ export function PromptManual({
         </Collapsible>
       )}
 
-      <div className="flex gap-2">
+      {erro && (
+        <Alert variant="destructive">
+          <AlertDescription className="text-[11px]">{erro}</AlertDescription>
+        </Alert>
+      )}
+
+      <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           size="xs"
           variant="secondary"
           disabled={pending || v.trim() === prompt.trim()}
-          onClick={() => start(async () => { await acao(id, n, v); setAberto(false); })}
+          onClick={() => start(async () => {
+            setErro("");
+            try {
+              await acao(id, n, v);
+              setAberto(false);
+            } catch (e) {
+              setErro(e instanceof Error ? e.message : String(e));
+            }
+          })}
         >
           {pending ? "salvando…" : "Salvar"}
         </Button>
+
+        {/* Sortear outra proposta custa uma chamada de texto, não crédito de
+            vídeo — mas a atual some. Por isso vem depois de "Salvar" e como
+            botão fantasma: a saída barata pra um prompt quase bom é editar. */}
+        {regerar && (
+          <Button
+            type="button"
+            size="xs"
+            variant="ghost"
+            disabled={pending}
+            onClick={() => start(async () => {
+              setErro("");
+              try {
+                await regerar(id, n);
+              } catch (e) {
+                setErro(e instanceof Error ? e.message : String(e));
+              }
+            })}
+          >
+            {pending ? "pedindo…" : "Gerar outro"}
+          </Button>
+        )}
+
         <Button
           type="button"
           size="xs"
           variant="outline"
-          onClick={() => { setV(prompt); setAberto(false); }}
+          disabled={pending}
+          onClick={() => { setV(prompt); setErro(""); setAberto(false); }}
         >
           cancelar
         </Button>
       </div>
+
+      {regerar && (
+        <FieldDescription className="text-[11px]">
+          “Gerar outro” devolve a rodada pra fila e a LLM escreve outra proposta —
+          alguns segundos, sem gastar crédito de vídeo. A proposta atual some.
+        </FieldDescription>
+      )}
     </Field>
   );
 }

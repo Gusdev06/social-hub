@@ -2,7 +2,8 @@ import type { RenderEstrutura, RenderManifest } from "@/db/schema";
 import { MODELOS_VIDEO, MODELO_PADRAO, custoClipe, modeloDe } from "@/lib/modelos-video";
 import {
   ajustarEscalaAction, aprovarAction, cancelarAction, marcarRecorteAction, pedirTakeAction,
-  regerarImagemAction, reprocessarAction, salvarAvatarAction, salvarPromptManualAction,
+  regerarImagemAction, regerarPromptAction, reprocessarAction, salvarAvatarAction,
+  salvarPromptManualAction,
   salvarRoteiroAction, tentarComModeloAction, usarTakeAction,
 } from "./actions";
 import { Escala } from "./escala";
@@ -190,7 +191,11 @@ export function JobCard({ job }: { job: Job }) {
                   </span>{" "}
                   {c.texto}
                 </p>
+                {/* A `key` carrega o prompt: o texto vive em estado local do
+                    componente, e sem remontar ele numa proposta nova a tela
+                    seguiria mostrando a proposta velha depois de "Gerar outro". */}
                 <PromptManual
+                  key={m.prompts?.find((p) => p.n === c.n)?.prompt ?? ""}
                   id={job.id}
                   n={c.n}
                   prompt={m.prompts?.find((p) => p.n === c.n)?.prompt ?? ""}
@@ -198,6 +203,9 @@ export function JobCard({ job }: { job: Job }) {
                   enviado={m.prompts?.find((p) => p.n === c.n)?.enviado}
                   portao={noPortaoDePrompt && c.n === proximoClipe}
                   acao={salvarPromptManualAction}
+                  regerar={
+                    noPortaoDePrompt && c.n === proximoClipe ? regerarPromptAction : undefined
+                  }
                 />
               </div>
             ))}
