@@ -55,11 +55,16 @@ A validação de `montar`/`compor` foi feita com os 2 clipes.
 - **O criativo de referência é LAYOUT, não asset.** O rip da Ad Library vem em 360x640.
   Normalizar a montagem por ele jogava 9x os pixels fora e o avatar saía minúsculo na
   composição. O alvo é a resolução nativa dos clipes (1080x1920 do Kling).
-- **O Whisper não pontua e come palavra.** Sem ponto, o fatiador empilha o roteiro
-  inteiro num clipe de 15s. E pedir "devolva o mesmo texto pontuado" ao modelo faz ele
-  comer uma palavra de vez em quando. Solução: reconstruir o texto a partir das palavras
-  da transcrição, importando do modelo só a pontuação. Ainda assim o Whisper perdeu o
+- **O Whisper come palavra, e nem sempre pontua.** Pedir "devolva o mesmo texto
+  pontuado" ao modelo faz ele comer uma palavra de vez em quando. Solução: reconstruir o
+  texto a partir das palavras da transcrição, importando do modelo só a pontuação — e
+  pular o modelo quando o Whisper já veio pontuado. Ainda assim o Whisper perdeu o
   "There's" que abre o gancho — por isso o painel deixa corrigir o roteiro à mão.
+- **Roteiro sem ponto não pode travar a esteira.** O fatiador só emendava em ponto final,
+  então copy em período corrido virava um clipe único de 108 sílabas em 15s e a rodada
+  morria pedindo correção manual (29/08, duas rodadas). Hoje `atomizar` desce pra oração
+  e, no limite, pra palavra, cobrando um preço por emenda: roteiro bem pontuado corta
+  igual a antes, roteiro corrido corta em vírgula em vez de parar a esteira.
 - **`--preview` do `montar_composto.py` sai antes de renderizar.** Precisa de duas
   passadas: uma pro frame de comparação, outra pro vídeo.
 - **`drizzle-kit push` estoura neste banco** (TypeError lendo CHECK constraint). DDL novo
