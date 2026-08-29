@@ -19,7 +19,7 @@ por cima. É a skill `trocar-avatar` + `clonar-edicao` virando produto.
 |---|---|
 | `analisar` — mede faixas (px) e cortes (s) do original | ✅ reproduziu a medição de 24/08: 360x640, corte em 8,66s |
 | `roteiro` — Whisper + pontuação + fatiamento | ✅ 3,94 sílabas/s, o mesmo ritmo calibrado da rodada manual |
-| `imagem_base` — nota de casting + Seedream | ✅ |
+| `imagem_base` — nota de casting + GPT Image 2 | ✅ |
 | `clipes` — Kling 3.0, um por tick, encadeado | ✅ (ver ressalva abaixo) |
 | `montar` — remove pausas, normaliza, costura | ✅ 1080x1920 |
 | `compor` — remonta o split screen | ✅ |
