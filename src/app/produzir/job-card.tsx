@@ -172,7 +172,9 @@ export function JobCard({ job }: { job: Job }) {
               {recusaDePrompt && (
                 <p>
                   Trocar de modelo de vídeo não é oferecido aqui porque nenhum chegaria
-                  a ser chamado — corrija a fala em “corrigir o roteiro”.
+                  a ser chamado: quem recusou foi o escritor de prompt, um passo ANTES da
+                  geração. Escreva o prompt deste clipe à mão logo acima — prompt seu não
+                  chama LLM nenhuma — ou corrija a fala em “corrigir o roteiro”.
                 </p>
               )}
             </AlertDescription>
